@@ -1,0 +1,12 @@
+[package]
+name = "day_23"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+priority-queue = "2.1.0"
+
+[lints.clippy]
+nursery = "deny"
+pedantic = "deny"
+all = "deny"
