@@ -1,14 +1,24 @@
 use nom::bytes::complete::tag;
 use nom::character::complete::{alpha0, anychar, u32};
 use nom::sequence::tuple;
-use nom::{IResult, Parser};
+use nom::Parser;
 use std::char;
 use std::fs::read_to_string;
 
-fn process_line(line: &str) -> IResult<&str, (usize, usize, char, &str)> {
-    tuple((u32, tag("-"), u32, tag(" "), anychar, tag(": "), alpha0))
-        .map(|(l, _, u, _, c, _, s)| (l as usize, u as usize, c, s))
-        .parse(line)
+fn process_line(line: &str) -> (usize, usize, char, &str) {
+    tuple((
+        u32::<&str, ()>,
+        tag("-"),
+        u32,
+        tag(" "),
+        anychar,
+        tag(": "),
+        alpha0,
+    ))
+    .map(|(l, _, u, _, c, _, s)| (l as usize, u as usize, c, s))
+    .parse(line)
+    .unwrap()
+    .1
 }
 
 fn is_valid_part_1(lower: usize, upper: usize, c: char, s: &str) -> bool {
@@ -23,11 +33,7 @@ fn is_valid_part_2(first: usize, second: usize, c: char, s: &str) -> bool {
 }
 fn solve(path: &str) -> (usize, usize) {
     let input = read_to_string(path).unwrap();
-    let processed: Vec<_> = input
-        .lines()
-        .map(process_line)
-        .map(|r| r.unwrap().1)
-        .collect();
+    let processed: Vec<_> = input.lines().map(process_line).collect();
     let output_1 = processed
         .iter()
         .filter(|&&(l, u, c, s)| is_valid_part_1(l, u, c, s))
