@@ -1,22 +1,13 @@
-use nom::bytes::complete::{is_not, tag};
-use nom::character::complete::{anychar, u32};
+use nom::bytes::complete::tag;
+use nom::character::complete::{alpha0, anychar, u32};
+use nom::sequence::tuple;
 use nom::{IResult, Parser};
 use std::char;
 use std::fs::read_to_string;
-use std::ops::RangeBounds;
 
 fn process_line(line: &str) -> IResult<&str, (usize, usize, char, &str)> {
-    u32.and(tag("-"))
-        .map(|x| x.0)
-        .and(u32)
-        .and(tag(" "))
-        .map(|x| x.0)
-        .and(anychar)
-        .map(|((lower, upper), c)| (lower, upper, c))
-        .and(tag(": "))
-        .map(|x| x.0)
-        .and(is_not(""))
-        .map(|((lower, upper, c), s)| (lower as usize, upper as usize, c, s))
+    tuple((u32, tag("-"), u32, tag(" "), anychar, tag(": "), alpha0))
+        .map(|(l, _, u, _, c, _, s)| (l as usize, u as usize, c, s))
         .parse(line)
 }
 
