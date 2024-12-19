@@ -2,7 +2,7 @@
 
 mod lib {
     pub mod positions_and_friends {
-        use std::{ops::Add, str::FromStr};
+        use std::ops::{Add, Neg, Sub};
 
         #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default)]
         struct Position {
@@ -34,6 +34,21 @@ mod lib {
             fn add(self, rhs: Self) -> Self::Output {
                 let (x, y) = (self.x + rhs.x, self.y + rhs.y);
                 Self { x, y }
+            }
+        }
+
+        impl Neg for Position {
+            type Output = Self;
+            fn neg(self) -> Self::Output {
+                let (x, y) = (-self.x, -self.y);
+                Self { x, y }
+            }
+        }
+
+        impl Sub for Position {
+            type Output = Self;
+            fn sub(self, rhs: Self) -> Self::Output {
+                self + -rhs
             }
         }
 

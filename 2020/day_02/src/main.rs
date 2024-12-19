@@ -1,8 +1,9 @@
-use nom::bytes::complete::tag;
-use nom::character::complete::{alpha0, anychar, u32};
-use nom::sequence::tuple;
-use nom::Parser;
-use std::char;
+use nom::{
+    bytes::complete::tag,
+    character::complete::{alpha0, anychar, u32},
+    sequence::tuple,
+    Parser,
+};
 use std::fs::read_to_string;
 
 fn process_line(line: &str) -> (usize, usize, char, &str) {
