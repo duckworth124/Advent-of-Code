@@ -3,6 +3,7 @@ use nom::character::complete::{anychar, u32};
 use nom::{IResult, Parser};
 use std::char;
 use std::fs::read_to_string;
+use std::ops::RangeBounds;
 
 fn process_line(line: &str) -> IResult<&str, (usize, usize, char, &str)> {
     u32.and(tag("-"))
@@ -19,18 +20,37 @@ fn process_line(line: &str) -> IResult<&str, (usize, usize, char, &str)> {
         .parse(line)
 }
 
-fn solve(path: &str) -> usize {
+fn is_valid_part_1(lower: usize, upper: usize, c: char, s: &str) -> bool {
+    let count = s.chars().filter(|&ch| ch == c).count();
+    (lower..=upper).contains(&count)
+}
+
+fn is_valid_part_2(first: usize, second: usize, c: char, s: &str) -> bool {
+    let first = s.chars().nth(first - 1).unwrap();
+    let second = s.chars().nth(second - 1).unwrap();
+    (first == c) ^ (second == c)
+}
+fn solve(path: &str) -> (usize, usize) {
     let input = read_to_string(path).unwrap();
-    input
+    let processed: Vec<_> = input
         .lines()
         .map(process_line)
-        .map(|x| x.unwrap().1)
-        .map(|(lower, upper, c, s)| (lower, upper, s.chars().filter(|x| *x == c).count()))
-        .filter(|(lower, upper, count)| (lower..=upper).contains(&count))
-        .count()
+        .map(|r| r.unwrap().1)
+        .collect();
+    let output_1 = processed
+        .iter()
+        .filter(|&&(l, u, c, s)| is_valid_part_1(l, u, c, s))
+        .count();
+
+    let output_2 = processed
+        .iter()
+        .filter(|&&(l, u, c, s)| is_valid_part_2(l, u, c, s))
+        .count();
+
+    (output_1, output_2)
 }
 
 fn main() {
-    let output = solve("input");
-    println!("part 1: {output}")
+    let (output_1, output_2) = solve("input");
+    println!("part 1: {output_1} part 2: {output_2}")
 }
