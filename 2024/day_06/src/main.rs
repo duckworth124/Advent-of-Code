@@ -1,10 +1,5 @@
-use std::{
-    collections::HashSet,
-    fs::read_to_string,
-    iter::{self},
-};
-
 use itertools::Itertools;
+use std::{collections::HashSet, fs::read_to_string, iter};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 struct Position {

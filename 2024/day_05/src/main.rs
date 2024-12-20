@@ -1,6 +1,5 @@
-use std::{cmp::Ordering, fs::read_to_string};
-
 use itertools::Itertools;
+use std::{cmp::Ordering, fs::read_to_string};
 
 fn is_ordered(list: &[u32], rules: &[(u32, u32)]) -> bool {
     rules
