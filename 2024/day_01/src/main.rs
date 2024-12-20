@@ -1,6 +1,5 @@
-use std::{fs::read_to_string, time::Instant};
-
 use itertools::Itertools;
+use std::{fs::read_to_string, time::Instant};
 
 fn process_input(input: &str) -> (Vec<u32>, Vec<u32>) {
     input

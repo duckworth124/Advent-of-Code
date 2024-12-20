@@ -30,10 +30,7 @@ fn solve(path: &str) -> (usize, usize) {
     let mut bag = input
         .split_whitespace()
         .map(|s| s.parse().unwrap())
-        .sorted_unstable()
-        .dedup_with_count()
-        .map(|(x, y)| (y, x))
-        .collect();
+        .counts();
 
     for _ in 0..25 {
         bag = update_bag(bag);
