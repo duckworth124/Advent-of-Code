@@ -4,8 +4,8 @@ use std::{
     fmt::Display,
     fs::read_to_string,
     ops::{Add, Mul, Neg, Sub},
+    time::Instant,
 };
-use tqdm::Iter;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default)]
 struct Position {
@@ -188,13 +188,6 @@ fn movement_sequence(
         .sum()
 }
 
-fn render(sequence: &[Instruction]) {
-    for i in sequence {
-        print!("{i}")
-    }
-    println!()
-}
-
 fn button_position(button: char) -> Position {
     let coords = match button {
         '7' => (0, 0),
@@ -235,6 +228,8 @@ fn solve(path: &str) -> (u64, u64) {
 }
 
 fn main() {
+    let now = Instant::now();
     let (output_1, output_2) = solve("input");
-    println!("part 1: {output_1} part 2: {output_2}")
+    println!("part 1: {output_1} part 2: {output_2}");
+    println!("time: {}s", now.elapsed().as_secs_f64())
 }
