@@ -1,17 +1,15 @@
 use std::fs::read_to_string;
 
-use regex::Regex;
-
 struct Population([u64; 9]);
 
 impl Population {
     fn new(input: &str) -> Self {
         let mut population = [0; 9];
-        for timer in get_all_numbers(input) {
+        for timer in input.trim().split(',').map(|s| s.parse::<usize>().unwrap()) {
             population[timer] += 1;
         }
 
-        Population(population)
+        Self(population)
     }
 
     fn count(&self) -> u64 {
@@ -24,14 +22,6 @@ impl Population {
             self.0[6] += self.0[8]
         }
     }
-}
-
-fn get_all_numbers(line: &str) -> Vec<usize> {
-    let num_pat = Regex::new(r"\d+").unwrap();
-    num_pat
-        .find_iter(line)
-        .map(|m| m.as_str().parse().unwrap())
-        .collect()
 }
 
 fn main() {

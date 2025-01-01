@@ -1,6 +1,5 @@
-use std::fs::read_to_string;
-
 use regex::Regex;
+use std::fs::read_to_string;
 
 struct Crabs(Vec<i32>);
 
