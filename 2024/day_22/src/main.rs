@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::{collections::HashMap, fs::read_to_string, iter, time::Instant};
+use std::{fs::read_to_string, iter, time::Instant};
 
 fn next_secret(mut current: u64) -> u64 {
     current ^= current << 6;
@@ -22,7 +22,7 @@ fn price_sequence(seed: u64) -> Vec<i8> {
 }
 
 fn max_bananas(sequences: &[Vec<i8>]) -> u64 {
-    let mut change_map = HashMap::new();
+    let mut change_map = [0; 19 * 19 * 19 * 19];
     sequences
         .iter()
         .flat_map(|s| {
@@ -31,11 +31,15 @@ fn max_bananas(sequences: &[Vec<i8>]) -> u64 {
                 .map(|(x, y)| (y - x, y))
                 .tuple_windows()
                 .map(|((d1, _), (d2, _), (d3, _), (d4, v))| ([d1, d2, d3, d4], v))
-                .unique_by(|(c, _)| *c)
                 .map(|(c, b)| (c, *b as u64))
+                .map(|(c, b)| (c.map(|x| x + 9), b))
+                .map(|(c, b)| (c.into_iter().fold(0, |acc, x| acc * 19 + x as usize), b))
+                .unique_by(|(c, _)| *c)
         })
-        .for_each(|(c, b)| *change_map.entry(c).or_default() += b);
-    *change_map.values().max().unwrap()
+        .fold(0_u64, |m, (c, b)| {
+            change_map[c] += b;
+            m.max(change_map[c])
+        })
 }
 
 fn solve(path: &str) -> (u64, u64) {

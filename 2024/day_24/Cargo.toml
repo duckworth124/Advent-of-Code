@@ -1,7 +1,8 @@
 [package]
-name = "day_02"
+name = "day_24"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-itertools = "0.14.0"
+itertools = "0.13.0"
+nom = "7.1.3"

@@ -1,12 +1,17 @@
 use std::{fs::read_to_string, time::Instant};
 
+use itertools::Itertools;
+
 fn is_monotone(data: &[u32]) -> bool {
-    data.windows(2).all(|v| v[0] < v[1]) || data.windows(2).all(|v| v[0] > v[1])
+    data.iter().tuple_windows().all(|(x, y)| x <= y)
+        | data.iter().tuple_windows().all(|(x, y)| x >= y)
 }
 
 fn is_gradual(data: &[u32]) -> bool {
-    data.windows(2)
-        .all(|v| (1..=3).contains(&v[0].abs_diff(v[1])))
+    data.iter()
+        .tuple_windows()
+        .map(|(x, y)| x.abs_diff(*y))
+        .all(|x| (1..=3).contains(&x))
 }
 
 fn is_safe(data: &[u32]) -> bool {

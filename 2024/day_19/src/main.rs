@@ -10,7 +10,6 @@ fn count_possible<'a>(
     }
 
     if target.is_empty() {
-        cache.insert(target, 1);
         return 1;
     }
 
