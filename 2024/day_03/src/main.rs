@@ -1,25 +1,24 @@
 use nom::{
-    branch::alt,
     bytes::complete::tag,
-    character::complete::{anychar, u32},
-    combinator::value,
-    multi::many0,
-    sequence::tuple,
-    Parser,
+    character::complete::{anychar, char, u32},
+    multi::{many0, many_till},
+    sequence::{delimited, separated_pair},
+    IResult, Parser,
 };
-use std::fs::read_to_string;
+use std::{fs::read_to_string, time::Instant};
+
+fn parse_mul(input: &str) -> IResult<&str, u32> {
+    delimited(tag("mul("), separated_pair(u32, char(','), u32), char(')'))
+        .map(|(x, y)| x * y)
+        .parse(input)
+}
 
 fn mul_sum(input: &str) -> u32 {
-    many0(alt((
-        tuple((tag("mul("), u32::<&str, ()>, tag(","), u32, tag(")")))
-            .map(|(_, x, _, y, _)| x * y)
-            .map(Some),
-        value(None, anychar),
-    )))
-    .map(|v| v.into_iter().flatten().sum())
-    .parse(input)
-    .unwrap()
-    .1
+    many0(many_till(anychar, parse_mul).map(|(_, i)| i))
+        .map(|v| v.into_iter().sum())
+        .parse(input)
+        .unwrap()
+        .1
 }
 
 fn mul_sum_cond(input: &str) -> u32 {
@@ -38,6 +37,8 @@ fn solve(path: &str) -> (u32, u32) {
 }
 
 fn main() {
+    let now = Instant::now();
     let (output_1, output_2) = solve("input");
     println!("part 1: {output_1} part 2: {output_2}");
+    println!("time: {}s", now.elapsed().as_secs_f64())
 }

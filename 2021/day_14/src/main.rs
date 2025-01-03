@@ -1,6 +1,5 @@
-use std::{collections::HashMap, fs::read_to_string};
-
 use itertools::Itertools;
+use std::{collections::HashMap, fs::read_to_string};
 
 struct InsertionMap(HashMap<[char; 2], char>);
 
@@ -43,9 +42,10 @@ impl Polymer {
 
     fn get_difference(&self) -> usize {
         let counts = &self.char_count;
-        let max = counts.values().max().unwrap();
-        let min = counts.values().min().unwrap();
-        max - min
+        match counts.values().minmax() {
+            itertools::MinMaxResult::MinMax(l, h) => h - l,
+            _ => 0,
+        }
     }
 
     fn grow(&mut self) {
@@ -55,19 +55,10 @@ impl Polymer {
             if let Some(&to_insert) = self.insertion_map.get(&pair) {
                 let first = pair[0];
                 let second = pair[1];
-                *new_char_count.entry(to_insert).or_insert(0) += count;
-
-                new_pair_count
-                    .entry(pair)
-                    .and_modify(|x| *x -= count);
-
-                *new_pair_count
-                    .entry([first, to_insert])
-                    .or_insert(0) += count;
-
-                *new_pair_count
-                    .entry([to_insert, second])
-                    .or_insert(0) += count;
+                *new_char_count.entry(to_insert).or_default() += count;
+                new_pair_count.entry(pair).and_modify(|x| *x -= count);
+                *new_pair_count.entry([first, to_insert]).or_default() += count;
+                *new_pair_count.entry([to_insert, second]).or_default() += count;
             }
         }
 

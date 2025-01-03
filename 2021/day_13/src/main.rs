@@ -39,10 +39,7 @@ struct Instructions(Vec<Instruction>);
 
 impl Instructions {
     fn new(input: &str) -> Self {
-        let input = input
-            .lines()
-            .skip_while(|line| !line.is_empty())
-            .skip(1);
+        let input = input.lines().skip_while(|line| !line.is_empty()).skip(1);
 
         let instructions = input.map(Instruction::new).collect();
 
@@ -58,11 +55,7 @@ impl Grid {
         let positions: Vec<(usize, usize)> = input
             .map(|line| {
                 let start: String = line.chars().take_while(|c| *c != ',').collect();
-                let end: String = line
-                    .chars()
-                    .skip_while(|c| *c != ',')
-                    .skip(1)
-                    .collect();
+                let end: String = line.chars().skip_while(|c| *c != ',').skip(1).collect();
 
                 (start.parse().unwrap(), end.parse().unwrap())
             })
@@ -146,7 +139,7 @@ impl Grid {
 }
 
 fn main() {
-    let input = read_to_string("practice").unwrap();
+    let input = read_to_string("input").unwrap();
     let mut grid = Grid::new(&input);
     let instructions = Instructions::new(&input);
     grid.apply_first(instructions.clone());

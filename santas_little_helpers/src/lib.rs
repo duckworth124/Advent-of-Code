@@ -86,23 +86,21 @@ mod lib {
 
     pub mod parsing {
         use nom::{
-            branch::alt,
             character::complete::{anychar, i32, u32},
-            multi::many0,
+            multi::{many0, many_till},
+            sequence::preceded,
             Parser,
         };
 
         fn all_numbers_i32(input: &str) -> Vec<i32> {
-            many0(alt((i32::<&str, ()>.map(Some), anychar.map(|_| None))))
-                .map(|x| x.into_iter().flatten().collect())
+            many0(preceded(many_till(anychar::<&str, ()>, i32), i32))
                 .parse(input)
                 .unwrap()
                 .1
         }
 
         fn all_numbers_u32(input: &str) -> Vec<u32> {
-            many0(alt((u32::<&str, ()>.map(Some), anychar.map(|_| None))))
-                .map(|x| x.into_iter().flatten().collect())
+            many0(preceded(many_till(anychar::<&str, ()>, u32), u32))
                 .parse(input)
                 .unwrap()
                 .1
