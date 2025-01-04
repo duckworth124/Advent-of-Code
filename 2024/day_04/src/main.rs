@@ -1,5 +1,5 @@
 use itertools::{iterate, Itertools};
-use std::{char, fs::read_to_string};
+use std::{char, fs::read_to_string, time::Instant};
 
 #[derive(Clone, Copy)]
 struct Position {
@@ -115,6 +115,8 @@ fn solve(path: &str) -> (usize, usize) {
 }
 
 fn main() {
+    let now = Instant::now();
     let (output_1, output_2) = solve("input");
-    println!("part 1: {output_1} part 2: {output_2}")
+    println!("part 1: {output_1} part 2: {output_2}");
+    println!("time: {}s", now.elapsed().as_secs_f64())
 }

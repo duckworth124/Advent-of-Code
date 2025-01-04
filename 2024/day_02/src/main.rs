@@ -1,10 +1,8 @@
+use itertools::Itertools;
 use std::{fs::read_to_string, time::Instant};
 
-use itertools::Itertools;
-
 fn is_monotone(data: &[u32]) -> bool {
-    data.iter().tuple_windows().all(|(x, y)| x <= y)
-        | data.iter().tuple_windows().all(|(x, y)| x >= y)
+    data.iter().tuple_windows().map(|(x, y)| x <= y).all_equal()
 }
 
 fn is_gradual(data: &[u32]) -> bool {

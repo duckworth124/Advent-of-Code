@@ -88,19 +88,18 @@ mod lib {
         use nom::{
             character::complete::{anychar, i32, u32},
             multi::{many0, many_till},
-            sequence::preceded,
             Parser,
         };
 
         fn all_numbers_i32(input: &str) -> Vec<i32> {
-            many0(preceded(many_till(anychar::<&str, ()>, i32), i32))
+            many0(many_till(anychar::<&str, ()>, i32).map(|(_, x)| x))
                 .parse(input)
                 .unwrap()
                 .1
         }
 
         fn all_numbers_u32(input: &str) -> Vec<u32> {
-            many0(preceded(many_till(anychar::<&str, ()>, u32), u32))
+            many0(many_till(anychar::<&str, ()>, u32).map(|(_, x)| x))
                 .parse(input)
                 .unwrap()
                 .1

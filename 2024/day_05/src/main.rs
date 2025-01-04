@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::{cmp::Ordering, fs::read_to_string};
+use std::{cmp::Ordering, fs::read_to_string, time::Instant};
 
 fn is_ordered(list: &[u32], rules: &[(u32, u32)]) -> bool {
     rules
@@ -62,6 +62,8 @@ fn solve(path: &str) -> (u32, u32) {
 }
 
 fn main() {
+    let now = Instant::now();
     let (output_1, ouptut_2) = solve("input");
-    println!("part 1: {output_1} part 2: {ouptut_2}")
+    println!("part 1: {output_1} part 2: {ouptut_2}");
+    println!("time: {}s", now.elapsed().as_secs_f64())
 }

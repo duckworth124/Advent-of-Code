@@ -1,24 +1,25 @@
-use nom::{
-    bytes::complete::tag,
-    character::complete::{anychar, char, u32},
-    multi::{many0, many_till},
-    sequence::{delimited, separated_pair},
-    IResult, Parser,
-};
 use std::{fs::read_to_string, time::Instant};
+use winnow::{
+    ascii::dec_uint,
+    combinator::{delimited, repeat, repeat_till, separated_pair},
+    token::any,
+    PResult, Parser,
+};
 
-fn parse_mul(input: &str) -> IResult<&str, u32> {
-    delimited(tag("mul("), separated_pair(u32, char(','), u32), char(')'))
-        .map(|(x, y)| x * y)
-        .parse(input)
+fn parse_mul(input: &mut &str) -> PResult<u32> {
+    delimited("mul(", separated_pair(dec_uint, ',', dec_uint), ')')
+        .map(|(x, y): (u32, u32)| x * y)
+        .parse_next(input)
 }
 
-fn mul_sum(input: &str) -> u32 {
-    many0(many_till(anychar, parse_mul).map(|(_, i)| i))
-        .map(|v| v.into_iter().sum())
-        .parse(input)
-        .unwrap()
-        .1
+fn mul_sum(mut input: &str) -> u32 {
+    repeat(
+        0..,
+        repeat_till(0.., any, parse_mul).map(|(_, i): ((), u32)| i),
+    )
+    .map(|v: Vec<u32>| v.into_iter().sum::<u32>())
+    .parse_next(&mut input)
+    .unwrap()
 }
 
 fn mul_sum_cond(input: &str) -> u32 {
