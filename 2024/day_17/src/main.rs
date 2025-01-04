@@ -1,5 +1,11 @@
-use regex::Regex;
 use std::{fs::read_to_string, time::Instant};
+
+use winnow::{
+    ascii::dec_uint,
+    combinator::{repeat, repeat_till},
+    token::any,
+    Parser,
+};
 
 #[derive(Clone, Copy)]
 struct State {
@@ -172,11 +178,13 @@ enum OperandType {
     Combo,
 }
 
-fn all_numbers(input: &str) -> Vec<u64> {
-    let pat = Regex::new(r"\d+").unwrap();
-    pat.find_iter(input)
-        .map(|s| s.as_str().parse().unwrap())
-        .collect()
+fn all_numbers(mut input: &str) -> Vec<u64> {
+    repeat(
+        0..,
+        repeat_till(0.., any::<&str, ()>, dec_uint).map(|((), i): ((), u64)| i),
+    )
+    .parse_next(&mut input)
+    .unwrap()
 }
 
 fn solve(path: &str) -> (String, u64) {

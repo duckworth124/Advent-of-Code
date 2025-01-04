@@ -1,7 +1,11 @@
-use std::fs::read_to_string;
-
 use nalgebra::{Matrix2, Vector2};
-use regex::Regex;
+use std::fs::read_to_string;
+use winnow::{
+    ascii::dec_uint,
+    combinator::{repeat, repeat_till},
+    token::any,
+    Parser,
+};
 
 fn get_presses(
     (button_a, button_b): (Vector2<u64>, Vector2<u64>),
@@ -18,18 +22,17 @@ fn get_presses(
         .map(|v| v.to_scalar())
 }
 
-fn process_input(input: &str) -> Vec<[u64; 6]> {
-    let pat = Regex::new(r"\d+").unwrap();
-    input
-        .split("\n\n")
-        .map(|s| {
-            pat.find_iter(s)
-                .map(|m| m.as_str().parse().unwrap())
-                .collect::<Vec<_>>()
-                .try_into()
-                .unwrap()
-        })
-        .collect()
+fn process_input(mut input: &str) -> Vec<[u64; 6]> {
+    repeat(
+        0..,
+        repeat(
+            6,
+            repeat_till(0.., any::<&str, ()>, dec_uint).map(|((), i): ((), u64)| i),
+        )
+        .try_map(|v: Vec<u64>| <[u64; 6]>::try_from(v)),
+    )
+    .parse_next(&mut input)
+    .unwrap()
 }
 
 fn total_tickets(machines: &[[u64; 6]], far_prizes: bool) -> u64 {

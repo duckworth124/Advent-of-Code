@@ -1,14 +1,9 @@
-use std::{collections::HashMap, fs::read_to_string, mem};
-
 use itertools::Itertools;
-use nom::{
-    branch::alt,
-    bytes::complete::{is_not, tag},
-    character::complete::{newline, not_line_ending, u64},
-    combinator::value,
-    multi::separated_list0,
-    sequence::tuple,
-    IResult, Parser,
+use std::{collections::HashMap, fs::read_to_string, mem};
+use winnow::{
+    ascii::{alphanumeric0, dec_uint, line_ending, till_line_ending},
+    combinator::{alt, separated},
+    PResult, Parser,
 };
 
 #[derive(Clone, Copy)]
@@ -25,18 +20,18 @@ enum Gate {
 }
 
 impl Gate {
-    fn parse(input: &str) -> IResult<&str, Self> {
-        alt((Self::parse_and, Self::parse_or, Self::parse_xor)).parse(input)
+    fn parse(input: &mut &str) -> PResult<Self> {
+        alt((Self::parse_and, Self::parse_or, Self::parse_xor)).parse_next(input)
     }
 
-    fn parse_and(input: &str) -> IResult<&str, Self> {
-        value(Self::And, tag("AND")).parse(input)
+    fn parse_and(input: &mut &str) -> PResult<Self> {
+        ("AND").value(Self::And).parse_next(input)
     }
-    fn parse_or(input: &str) -> IResult<&str, Self> {
-        value(Self::Or, tag("OR")).parse(input)
+    fn parse_or(input: &mut &str) -> PResult<Self> {
+        ("OR").value(Self::Or).parse_next(input)
     }
-    fn parse_xor(input: &str) -> IResult<&str, Self> {
-        value(Self::Xor, tag("XOR")).parse(input)
+    fn parse_xor(input: &mut &str) -> PResult<Self> {
+        ("XOR").value(Self::Xor).parse_next(input)
     }
 
     fn eval(self, x: bool, y: bool) -> bool {
@@ -55,17 +50,18 @@ struct Network {
 }
 
 impl Network {
-    fn parse(input: &str) -> IResult<&str, Self> {
+    fn parse(input: &str) -> Self {
         let mut wires = vec![];
         let mut indices = HashMap::new();
 
-        let (rest, (literals, gates)) = tuple((
-            separated_list0(newline, Self::parse_literal),
-            tag("\n\n"),
-            separated_list0(newline, Self::parse_gate),
-        ))
-        .map(|(l, _, g)| (l, g))
-        .parse(input)?;
+        let (literals, gates): (Vec<(&str, Connection)>, Vec<_>) = (
+            separated(0.., Self::parse_literal, line_ending),
+            "\n\n",
+            separated(0.., Self::parse_gate, line_ending),
+        )
+            .map(|(l, _, g)| (l, g))
+            .parse(input)
+            .unwrap();
 
         let literals: Vec<(usize, Connection)> = literals
             .into_iter()
@@ -97,33 +93,32 @@ impl Network {
             .into_iter()
             .map(|(s, n)| (s.to_string(), n))
             .collect();
-        let output = Self {
+
+        Self {
             wires,
             connections,
             indices,
-        };
-
-        Ok((rest, output))
+        }
     }
 
-    fn parse_gate(input: &str) -> IResult<&str, (&str, &str, &str, Gate)> {
-        tuple((
-            is_not(" "),
-            tag(" "),
+    fn parse_gate<'a>(input: &mut &'a str) -> PResult<(&'a str, &'a str, &'a str, Gate)> {
+        (
+            alphanumeric0,
+            (' '),
             Gate::parse,
-            tag(" "),
-            is_not(" "),
-            tag(" -> "),
-            not_line_ending,
-        ))
-        .map(|(x, _, g, _, y, _, z)| (x, y, z, g))
-        .parse(input)
+            (' '),
+            alphanumeric0,
+            (" -> "),
+            till_line_ending,
+        )
+            .map(|(x, _, g, _, y, _, z)| (x, y, z, g))
+            .parse_next(input)
     }
 
-    fn parse_literal(input: &str) -> IResult<&str, (&str, Connection)> {
-        tuple((is_not(":"), tag(": "), u64))
-            .map(|(s, _, n)| (s, Connection::Literal(n != 0)))
-            .parse(input)
+    fn parse_literal<'a>(input: &mut &'a str) -> PResult<(&'a str, Connection)> {
+        (alphanumeric0, (": "), dec_uint)
+            .map(|(s, _, n): (&str, _, u8)| (s, Connection::Literal(n != 0)))
+            .parse_next(input)
     }
 
     fn run(&self) -> Option<Vec<bool>> {
@@ -229,7 +224,7 @@ fn index_of<'a>(
 pub fn solve(path: &str) -> (u64, String) {
     println!("{path}");
     let input = read_to_string(path).unwrap();
-    let mut network = Network::parse(&input).unwrap().1;
+    let mut network = Network::parse(input.trim());
     let outputs = network.run().unwrap();
     let ouptut_1 = network.get_output(&outputs, 'z');
 

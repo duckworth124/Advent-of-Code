@@ -1,6 +1,5 @@
-use std::fs::read_to_string;
-
 use itertools::Itertools;
+use std::fs::read_to_string;
 
 fn is_reachable(operands: &[u64], target: u64, allow_concatenation: bool) -> bool {
     if operands.len() == 1 {
@@ -50,7 +49,7 @@ fn solve(path: &str) -> (u64, u64) {
     let input = read_to_string(path).unwrap();
     let lists = input
         .lines()
-        .map(|l| l.split(':').collect_tuple().unwrap())
+        .map(|l| l.split_once(':').unwrap())
         .map(|(s, s2)| {
             (
                 s.parse().unwrap(),

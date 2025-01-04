@@ -93,15 +93,6 @@ fn checksum(disk: &[Option<usize>]) -> usize {
         .sum()
 }
 
-fn render(disk: &[Option<usize>]) -> String {
-    disk.iter()
-        .map(|o| match o {
-            Some(i) => i.to_string(),
-            None => ".".to_string(),
-        })
-        .collect()
-}
-
 fn solve(path: &str) -> (usize, usize) {
     let input = read_to_string(path).unwrap();
     let mut disk = process_input(&input);

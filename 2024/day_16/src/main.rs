@@ -1,11 +1,10 @@
+use itertools::Itertools;
+use priority_queue::PriorityQueue;
 use std::{
     cmp::Reverse,
     collections::{HashMap, HashSet},
     fs::read_to_string,
 };
-
-use itertools::Itertools;
-use priority_queue::PriorityQueue;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
 struct Position {

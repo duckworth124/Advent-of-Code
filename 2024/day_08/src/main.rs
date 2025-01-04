@@ -85,7 +85,7 @@ fn count_unique_antinodes(
                 })
         })
         .unique()
-        .filter(|p| (0..width).contains(&p.x) && (0..height).contains(&p.y))
+        .filter(|p| is_in_bounds(*p, width, height))
         .count()
 }
 

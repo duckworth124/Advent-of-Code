@@ -1,7 +1,15 @@
 use itertools::Itertools;
-use regex::Regex;
-use std::fs::{read_to_string, File};
-use std::io::Write;
+use std::{
+    fs::{read_to_string, File},
+    io::Write,
+};
+use winnow::{
+    ascii::dec_int,
+    combinator::{repeat, repeat_till},
+    error::ErrorKind,
+    token::any,
+    Parser,
+};
 
 fn simulate(robots: &[[i32; 4]], width: i32, height: i32, steps: i32) -> Vec<[i32; 2]> {
     robots
@@ -12,17 +20,17 @@ fn simulate(robots: &[[i32; 4]], width: i32, height: i32, steps: i32) -> Vec<[i3
         .collect()
 }
 
-fn process_input(input: &str) -> Vec<[i32; 4]> {
-    let pat = Regex::new(r"-?\d+").unwrap();
-    input
-        .lines()
-        .map(|l| {
-            pat.find_iter(l)
-                .map(|m| m.as_str().parse::<i32>().unwrap())
-                .collect::<Vec<_>>()
-        })
-        .map(|v| v.try_into().unwrap())
-        .collect()
+fn process_input(mut input: &str) -> Vec<[i32; 4]> {
+    repeat(
+        0..,
+        repeat(
+            4,
+            repeat_till(0.., any::<&str, ErrorKind>, dec_int).map(|((), i): ((), i32)| i),
+        )
+        .try_map(|v: Vec<_>| <[i32; 4]>::try_from(v)),
+    )
+    .parse_next(&mut input)
+    .unwrap()
 }
 
 fn render(positions: &[[usize; 2]], width: usize, height: usize) -> String {
