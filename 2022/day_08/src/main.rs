@@ -20,7 +20,7 @@ fn main() {
 }
 
 fn is_visible_from_direction(
-    grid: &Vec<Vec<u32>>,
+    grid: &[Vec<u32>],
     (x, y): (usize, usize),
     direction: Direction,
 ) -> bool {
@@ -34,7 +34,7 @@ fn is_visible_from_direction(
     values_to_check.iter().all(|&n| n < grid[y][x])
 }
 
-fn is_visible(grid: &Vec<Vec<u32>>, pos: (usize, usize)) -> bool {
+fn is_visible(grid: &[Vec<u32>], pos: (usize, usize)) -> bool {
     [
         Direction::Up,
         Direction::Down,
@@ -42,10 +42,10 @@ fn is_visible(grid: &Vec<Vec<u32>>, pos: (usize, usize)) -> bool {
         Direction::Right,
     ]
     .iter()
-    .any(|&d| is_visible_from_direction(&grid, pos, d))
+    .any(|&d| is_visible_from_direction(grid, pos, d))
 }
 
-fn count_visible(grid: &Vec<Vec<u32>>) -> usize {
+fn count_visible(grid: &[Vec<u32>]) -> usize {
     (0..grid.len())
         .cartesian_product(0..grid[0].len())
         .filter(|&pos| is_visible(grid, pos))
@@ -59,7 +59,7 @@ fn process_input(input: &str) -> Vec<Vec<u32>> {
         .collect()
 }
 
-fn viewing_distance(grid: &Vec<Vec<u32>>, (x, y): (usize, usize), direction: Direction) -> usize {
+fn viewing_distance(grid: &[Vec<u32>], (x, y): (usize, usize), direction: Direction) -> usize {
     let values_to_check: Vec<u32> = match direction {
         Direction::Up => (0..y).map(|i| grid[i][x]).rev().collect(),
         Direction::Down => (y + 1..grid.len()).map(|i| grid[i][x]).collect(),
@@ -67,26 +67,15 @@ fn viewing_distance(grid: &Vec<Vec<u32>>, (x, y): (usize, usize), direction: Dir
         Direction::Right => (x + 1..grid[0].len()).map(|i| grid[y][i]).collect(),
     };
 
-    if values_to_check.len() == 0 {
-        return 0;
-    };
+    let height = grid[y][x];
 
     values_to_check
         .into_iter()
-        .scan(true, |visible, n| {
-            if !*visible {
-                return Some((n, false));
-            };
-            if n >= grid[y][x] {
-                *visible = false
-            };
-            Some((n, true))
-        })
-        .take_while(|&(_, b)| b)
+        .take_while_inclusive(|&h| h < height)
         .count()
 }
 
-fn scenic_score(grid: &Vec<Vec<u32>>, pos: (usize, usize)) -> usize {
+fn scenic_score(grid: &[Vec<u32>], pos: (usize, usize)) -> usize {
     [
         Direction::Up,
         Direction::Down,
@@ -98,7 +87,7 @@ fn scenic_score(grid: &Vec<Vec<u32>>, pos: (usize, usize)) -> usize {
     .product()
 }
 
-fn max_scenic_score(grid: &Vec<Vec<u32>>) -> usize {
+fn max_scenic_score(grid: &[Vec<u32>]) -> usize {
     (0..grid.len())
         .cartesian_product(0..grid[0].len())
         .map(|pos| scenic_score(grid, pos))

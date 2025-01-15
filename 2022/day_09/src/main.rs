@@ -51,7 +51,7 @@ impl Position {
         }
         if dy < 0 {
             self.y -= 1
-        }1
+        }
     }
 }
 
@@ -87,7 +87,7 @@ fn main() {
     println!("part 1: {output_1} part 2: {output_2}");
 }
 
-fn get_visited(instructions: &Vec<(Direction, u32)>, rope_length: usize) -> usize {
+fn get_visited(instructions: &[(Direction, u32)], rope_length: usize) -> usize {
     let mut visited: HashSet<Position> = HashSet::new();
     let mut rope = Rope::new(rope_length);
 
@@ -100,6 +100,7 @@ fn get_visited(instructions: &Vec<(Direction, u32)>, rope_length: usize) -> usiz
 
     visited.len()
 }
+
 fn process_input(input: &str) -> Vec<(Direction, u32)> {
     input
         .lines()

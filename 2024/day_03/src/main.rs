@@ -14,8 +14,8 @@ fn parse_mul(input: &mut &str) -> PResult<u32> {
 
 fn mul_sum(mut input: &str) -> u32 {
     repeat(
-        0..,
-        repeat_till(0.., any, parse_mul).map(|(_, i): ((), u32)| i),
+        ..,
+        repeat_till(.., any, parse_mul).map(|(_, i): ((), u32)| i),
     )
     .map(|v: Vec<u32>| v.into_iter().sum::<u32>())
     .parse_next(&mut input)
@@ -25,7 +25,8 @@ fn mul_sum(mut input: &str) -> u32 {
 fn mul_sum_cond(input: &str) -> u32 {
     input
         .split("do()")
-        .flat_map(|s| s.split("don't()").next())
+        .filter_map(|s| s.split_once("don't()"))
+        .map(|(x, _)| x)
         .map(mul_sum)
         .sum()
 }

@@ -31,7 +31,7 @@ fn main() {
 fn part_1(directories: &HashMap<Vec<String>, Directory>) -> u32 {
     let mut output = 0;
     for path in directories.keys() {
-        let size = get_size(&directories, path.clone());
+        let size = get_size(directories, path.clone());
         if size <= MAX_FILE_SIZE {
             output += size
         }

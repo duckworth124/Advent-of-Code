@@ -1,6 +1,5 @@
-use std::fs::read_to_string;
-
 use itertools::Itertools;
+use std::fs::read_to_string;
 
 fn column_values(input: &str) -> Vec<usize> {
     (0..input.lines().next().unwrap().len())

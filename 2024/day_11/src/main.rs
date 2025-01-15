@@ -6,10 +6,11 @@ fn update(stone: u64) -> Vec<u64> {
         return vec![1];
     }
 
-    let stone_str = stone.to_string();
-    if stone_str.len() % 2 == 0 {
-        let (l, r) = stone_str.split_at(stone_str.len() / 2);
-        return vec![l.parse().unwrap(), r.parse().unwrap()];
+    let num_digits = stone.ilog10();
+    if num_digits % 2 == 0 {
+        let d = 10u64.pow(num_digits);
+        let (l, r) = (stone / d, stone % d);
+        return vec![l, r];
     }
 
     vec![stone * 2024]

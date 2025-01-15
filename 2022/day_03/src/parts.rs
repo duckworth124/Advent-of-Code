@@ -1,8 +1,10 @@
+use std::{char, collections::HashSet};
+
 fn get_common_item(line: &str) -> char {
     let (left, right) = line.split_at(line.chars().count() / 2);
-    left.chars()
-        .find(|&c| right.contains(c))
-        .unwrap()
+    let left = left.chars().collect::<HashSet<char>>();
+    let right = right.chars().collect::<HashSet<char>>();
+    *left.intersection(&right).next().unwrap()
 }
 
 fn get_priority(c: char) -> u32 {
@@ -15,16 +17,25 @@ fn get_priority(c: char) -> u32 {
 }
 
 pub fn part_1(input: &str) -> u32 {
-    input.lines()
+    input
+        .lines()
         .map(|line| get_priority(get_common_item(line)))
         .sum()
 }
 
 pub fn part_2(input: &str) -> u32 {
-    input.lines()
+    input
+        .lines()
         .collect::<Vec<&str>>()
         .chunks(3)
-        .map(|trio| trio[0].chars().find(|&c| trio[1].contains(c) && trio[2].contains(c)).unwrap())
+        .map(|trio| {
+            trio.iter()
+                .map(|s| s.chars().collect::<HashSet<char>>())
+                .collect::<Vec<_>>()
+        })
+        .map(|trio| &(&trio[0] & &trio[1]) & &trio[2])
+        .map(|s| s.into_iter().next().unwrap())
         .map(get_priority)
         .sum()
 }
+

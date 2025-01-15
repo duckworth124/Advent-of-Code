@@ -18,7 +18,7 @@ fn part_1((mut stacks, instructions): (Vec<Vec<char>>, Vec<(u32, usize, usize)>)
 
     let mut output = "".to_string();
     for stack in stacks {
-        output.push(stack.last().unwrap().clone());
+        output.push(*stack.last().unwrap());
     }
 
     output
@@ -31,12 +31,12 @@ fn part_2((mut stacks, instructions): (Vec<Vec<char>>, Vec<(u32, usize, usize)>)
 
     let mut output = "".to_string();
     for stack in stacks {
-        output.push(stack.last().unwrap().clone());
+        output.push(*stack.last().unwrap());
     }
 
     output
 }
-fn move_crates(stacks: &mut Vec<Vec<char>>, count: u32, from: usize, to: usize) {
+fn move_crates(stacks: &mut [Vec<char>], count: u32, from: usize, to: usize) {
     let from = from - 1;
     let to = to - 1;
     for _ in 0..count {
@@ -45,7 +45,7 @@ fn move_crates(stacks: &mut Vec<Vec<char>>, count: u32, from: usize, to: usize) 
     }
 }
 
-fn move_multiple_crates(stacks: &mut Vec<Vec<char>>, count: u32, from: usize, to: usize) {
+fn move_multiple_crates(stacks: &mut [Vec<char>], count: u32, from: usize, to: usize) {
     let from = from - 1;
     let to = to - 1;
     let mut crates = vec![];
@@ -89,7 +89,7 @@ fn process_input(input: &str) -> (Vec<Vec<char>>, Vec<(u32, usize, usize)>) {
         .into_iter()
         .map(|line| {
             line.split_whitespace()
-                .filter(|s| s.chars().next().unwrap().is_digit(10))
+                .filter(|s| s.chars().next().unwrap().is_ascii_digit())
                 .collect::<Vec<_>>()
         })
         .map(|v| {
