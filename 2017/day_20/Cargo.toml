@@ -1,9 +1,8 @@
 [package]
-name = "day_23"
+name = "day_20"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 itertools = "0.14.0"
-priority-queue = "2.1.0"
-
+winnow = "0.7.6"
