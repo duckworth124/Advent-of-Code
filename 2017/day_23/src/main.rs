@@ -150,7 +150,7 @@ fn solve(mut input: &str) -> (u32, usize) {
         }
     }
 
-    //the program counts the amount b for 107900 <= b <= 124900 in steps of 17 that are composite
+    //the program counts the numbers b for 107900 <= b <= 124900 in steps of 17 that are composite
     let output_2: usize = (107900..=124900)
         .step_by(17)
         .map(|n| (2..n).filter(|p| n % *p == 0).count())
