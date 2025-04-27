@@ -31,12 +31,39 @@ impl Stats {
         ]
     }
 
+    fn to_vecs(self) -> (Vec<Option<u32>>, Vec<Option<u32>>, Vec<Option<u32>>) {
+        (
+            vec![
+                self.children,
+                self.samoyeds,
+                self.akitas,
+                self.vizslas,
+                self.cars,
+                self.perfumes,
+            ],
+            vec![self.cats, self.trees],
+            vec![self.pomeranians, self.goldfish],
+        )
+    }
+
     fn could_be(self, other: Self) -> bool {
-        self.to_vec()
-            .into_iter()
-            .zip(other.to_vec())
-            .filter_map(|(x, y)| x.zip(y))
-            .all(|(x, y)| x == y)
+        could_be_equal(self.to_vec(), other.to_vec())
+    }
+
+    fn could_be_2(self, other: Self) -> bool {
+        let (eq, gt, lt) = self.to_vecs();
+        let (eq2, gt2, lt2) = other.to_vecs();
+        could_be_equal(eq, eq2)
+            && gt
+                .into_iter()
+                .zip(gt2)
+                .filter_map(|(x, y)| x.zip(y))
+                .all(|(x, y)| x > y)
+            && lt
+                .into_iter()
+                .zip(lt2)
+                .filter_map(|(x, y)| x.zip(y))
+                .all(|(x, y)| x < y)
     }
 
     fn parse(mut input: &str) -> Self {
@@ -65,18 +92,31 @@ impl Stats {
     }
 }
 
+fn could_be_equal(v1: Vec<Option<u32>>, v2: Vec<Option<u32>>) -> bool {
+    v1.into_iter()
+        .zip(v2)
+        .filter_map(|(x, y)| x.zip(y))
+        .all(|(x, y)| x == y)
+}
+
 const THE_TRUE_SUE: &str = "Sue 0: children: 3, cats: 7, samoyeds: 2, pomeranians: 3, akitas: 0, vizslas: 0, goldfish: 5, trees: 3, cars: 2, perfumes: 1";
 
 fn main() {
     let input = read_to_string("input").unwrap();
     let target = Stats::parse(THE_TRUE_SUE);
-    dbg!(target);
-    let output = input
+    let output_1 = input
         .lines()
         .map(Stats::parse)
         .position(|s| s.could_be(target))
         .unwrap()
         + 1;
 
-    println!("part 1: {output}")
+    let output_2 = input
+        .lines()
+        .map(Stats::parse)
+        .position(|s| s.could_be_2(target))
+        .unwrap()
+        + 1;
+
+    println!("part 1: {output_1} part 2: {output_2}")
 }
