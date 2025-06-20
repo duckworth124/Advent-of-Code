@@ -1,7 +1,7 @@
 [package]
-name = "day_19"
+name = "day_20"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-winnow = "0.7.10"
+itertools = "0.14.0"

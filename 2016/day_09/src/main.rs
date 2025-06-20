@@ -1,32 +1,21 @@
 use std::fs::read_to_string;
-
 use winnow::{
     Parser, Result,
     ascii::dec_uint,
     combinator::{delimited, separated_pair},
 };
 
-fn decrompressed_len(mut input: &str) -> usize {
-    let mut output = 0;
-    while !input.is_empty() {
-        if let Ok((len, count)) = parse_marker(&mut input) {
-            output += len * count;
-            input = &input[len..];
-            continue;
-        }
-        output += 1;
-        input = &input[1..];
-    }
-
-    output
-}
-
-fn decrompressed_len_2(mut input: &str) -> usize {
+fn decrompressed_len(mut input: &str, recursive: bool) -> usize {
     let mut output = 0;
     while !input.is_empty() {
         if let Ok((len, count)) = parse_marker(&mut input) {
             let s = &input[..len];
-            output += decrompressed_len_2(s) * count;
+            let expanded_len = if recursive {
+                decrompressed_len(s, recursive)
+            } else {
+                s.len()
+            };
+            output += expanded_len * count;
             input = &input[len..];
             continue;
         }
@@ -42,8 +31,8 @@ fn parse_marker(input: &mut &str) -> Result<(usize, usize)> {
 }
 
 fn solve(input: &str) -> (usize, usize) {
-    let output_1 = decrompressed_len(input.trim());
-    let output_2 = decrompressed_len_2(input.trim());
+    let output_1 = decrompressed_len(input.trim(), false);
+    let output_2 = decrompressed_len(input.trim(), true);
     (output_1, output_2)
 }
 

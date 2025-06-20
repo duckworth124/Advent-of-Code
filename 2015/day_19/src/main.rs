@@ -28,21 +28,8 @@ fn all_prefix_replacements(input: &str, rules: &HashMap<String, Vec<String>>) ->
         .collect()
 }
 
-fn min_steps(start: &str, target: &str, rules: &HashMap<String, Vec<String>>) -> u32 {
-    let mut frontier: HashSet<String> = HashSet::from_iter(vec![start.to_string()]);
-    let mut steps = 0;
-    loop {
-        if frontier.contains(target) {
-            return steps;
-        }
-        dbg!(steps);
-        dbg!(frontier.len());
-        steps += 1;
-        frontier = frontier
-            .into_iter()
-            .flat_map(|s| all_replacements(&s, rules))
-            .collect();
-    }
+fn single_replacement(input: &str, rules: &HashMap<String, Vec<String>>) -> Option<String> {
+    all_replacements(input, rules).into_iter().next()
 }
 
 fn main() {
@@ -64,17 +51,22 @@ fn main() {
         );
 
     let output_1 = all_replacements(start, &rules).len();
-    /*let reverse_rules: HashMap<String, Vec<String>> = rules
-    .into_iter()
-    .map(|(k, v)| v.into_iter().map(move |s| (k.clone(), s)))
-    .flatten()
-    .map(|(l, r)| (r, l))
-    .fold(HashMap::new(), |mut map, (l, r)| {
-        map.entry(l.to_string()).or_insert(vec![]).push(r);
-        map
-    });*/
+    let reverse_rules: HashMap<String, Vec<String>> = rules
+        .into_iter()
+        .flat_map(|(k, v)| v.into_iter().map(move |s| (k.clone(), s)))
+        .map(|(l, r)| (r, l))
+        .fold(HashMap::new(), |mut map, (l, r)| {
+            map.entry(l).or_default().push(r);
+            map
+        });
 
-    let output_2 = min_steps("e", start, &rules);
+    let mut current = start.to_string();
+
+    let mut output_2 = 0;
+    while current != "e" {
+        current = single_replacement(&current, &reverse_rules).unwrap();
+        output_2 += 1
+    }
 
     println!("part 1: {output_1} part 2: {output_2}");
 }

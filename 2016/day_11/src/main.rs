@@ -1,147 +1,169 @@
-use std::collections::{HashSet, VecDeque};
-
-use itertools::{Itertools, chain};
-use winnow::{
-    Parser, Result,
-    ascii::alpha0,
-    combinator::{alt, delimited},
+use itertools::Itertools;
+use std::{
+    collections::{HashSet, VecDeque},
+    fs::read_to_string,
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+enum DeviceType {
+    Microchip,
+    Generator,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+struct Device {
+    name: String,
+    device_type: DeviceType,
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 struct State {
+    floors: [Vec<Device>; 4],
     current_floor: usize,
-    floors: [Vec<Object>; 4],
-    holding: (Object, Option<Object>),
 }
 
 impl State {
-    fn min_steps(self) -> Option<u32> {
-        let mut frontier = VecDeque::from([(self, 0)]);
-        loop {
-            let (current_state, steps) = frontier.pop_front()?;
-            if !current_state.is_valid() {
-                continue;
-            }
-            if current_state.is_goal() {
-                return Some(steps);
-            }
-            frontier.extend(
-                current_state
-                    .get_possible()
-                    .into_iter()
-                    .map(|s| (s, steps + 1)),
-            );
-        }
-    }
-
-    fn is_goal(&self) -> bool {
-        self.current_floor == 0 && self.floors[..3].iter().all(|f| f.is_empty())
-    }
-
     fn is_valid(&self) -> bool {
-        (0..4).map(|floor| self.get_objects(floor)).all(|objects| {
-            let (microchips, generators): (HashSet<&String>, HashSet<&String>) = objects
-                .iter()
-                .fold(Default::default(), |(mut microchips, mut generators), o| {
-                    match o {
-                        Object::Microchip(s) => microchips.insert(s),
-                        Object::Generator(s) => generators.insert(s),
-                    };
-                    (microchips, generators)
-                });
-            generators.is_empty() || microchips.is_subset(&generators)
-        })
+        for floor in &self.floors {
+            for device in floor {
+                if device.device_type == DeviceType::Microchip {
+                    if floor
+                        .iter()
+                        .any(|d| d.name == device.name && d.device_type == DeviceType::Generator)
+                    {
+                        continue;
+                    }
+
+                    if floor.iter().any(|d| d.device_type == DeviceType::Generator) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        true
     }
 
-    fn get_possible(&self) -> Vec<Self> {
-        let objects = self.get_objects(self.current_floor);
-        objects
+    fn apply_action(&self, action: Action) -> Option<Self> {
+        dbg!(&action);
+        let mut output = self.clone();
+        if self.current_floor == 0 && action.direction == Direction::Down {
+            return None;
+        }
+        if self.current_floor == 3 && action.direction == Direction::Up {
+            return None;
+        }
+        for device in &action.holding {
+            output.floors[self.current_floor].retain(|d| d != device);
+        }
+        let new_floor = match action.direction {
+            Direction::Down => self.current_floor.saturating_sub(1),
+            Direction::Up => self.current_floor + 1,
+        };
+        output.floors[new_floor].extend(action.holding);
+        if !output.is_valid() {
+            return None;
+        }
+        dbg!(output);
+        panic!();
+
+        Some(output)
+    }
+
+    fn possible_actions(&self) -> Vec<Action> {
+        self.floors[self.current_floor]
             .iter()
-            .map(|&o| (o.clone(), None))
-            .chain(
-                objects
-                    .iter()
-                    .permutations(2)
-                    .map(|v| ((*v[0]).to_owned(), Some(v[1].to_owned()))),
-            )
-            .map(|(o1, o2)| {
-                let new_objects: Vec<Object> = objects
-                    .iter()
-                    .filter(|&&o| *o != o1)
-                    .filter(|o| o2 != Some(o))
-                    .cloned()
-                    .cloned()
-                    .collect();
-                let mut new_state = self.clone();
-                new_state.floors[self.current_floor] = new_objects;
-                new_state
-            })
-            .flat_map(|s| match self.current_floor {
-                0 => vec![Self {
-                    current_floor: 1,
-                    ..s
-                }],
-                1 | 2 => vec![
-                    Self {
-                        current_floor: s.current_floor + 1,
-                        ..s.clone()
-                    },
-                    Self {
-                        current_floor: s.current_floor - 1,
-                        ..s
-                    },
-                ],
-                3 => vec![Self {
-                    current_floor: 2,
-                    ..s
-                }],
-                _ => unreachable!(),
+            .combinations(2)
+            .chain(self.floors.iter().map(|d| d.iter().collect()))
+            .cartesian_product(&[Direction::Up, Direction::Down])
+            .map(|(v, d)| Action {
+                holding: v.iter().cloned().cloned().collect(),
+                direction: *d,
             })
             .collect()
     }
 
-    fn get_objects(&self, floor: usize) -> Vec<&Object> {
-        let mut objects: Vec<&Object> = self.floors[floor].iter().collect();
-        if self.current_floor == floor {
-            let (o1, o2) = &self.holding;
-            objects.extend(chain!([o1], o2));
+    fn min_steps(&self) -> Option<u32> {
+        let mut frontier = VecDeque::from([(self.clone(), 0)]);
+        let mut visited = HashSet::new();
+        loop {
+            let (current_state, time) = frontier.pop_front()?;
+            dbg!(&current_state);
+            if current_state.floors.iter().take(3).all(|v| v.is_empty()) {
+                return Some(time);
+            }
+            if !visited.insert(current_state.clone()) {
+                continue;
+            }
+            current_state
+                .possible_actions()
+                .into_iter()
+                .filter_map(|a| current_state.apply_action(a))
+                .for_each(|s| frontier.push_back((s, time + 1)));
         }
-        objects
-    }
-
-    fn parse_floor(input: &mut &str) -> Result<Vec<Object>> {
-        todo!()
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-enum Object {
-    Microchip(String),
-    Generator(String),
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+enum Direction {
+    Up,
+    Down,
 }
 
-impl Object {
-    fn parse_microchip(input: &mut &str) -> Result<Self> {
-        delimited("a ", alpha0, "-compatible microchip")
-            .map(|s: &str| Self::Microchip(s.to_string()))
-            .parse_next(input)
-    }
+#[derive(Debug)]
+struct Action {
+    holding: Vec<Device>,
+    direction: Direction,
+}
 
-    fn parse_generator(input: &mut &str) -> Result<Self> {
-        delimited("a ", alpha0, " generator")
-            .map(|s: &str| Self::Generator(s.to_string()))
-            .parse_next(input)
-    }
-
-    fn parse(input: &mut &str) -> Result<Self> {
-        alt((Self::parse_microchip, Self::parse_generator)).parse_next(input)
-    }
+fn parse_floor(line: &str) -> Vec<Device> {
+    let line = line.split_once("contains").unwrap().1;
+    let line = line.replace("and", ",");
+    line.split(',')
+        .map(|s| {
+            if s.contains("microchip") {
+                let name = s.split_once(" a ").unwrap().1.split_once('-').unwrap().0;
+                Device {
+                    name: name.to_string(),
+                    device_type: DeviceType::Microchip,
+                }
+            } else {
+                let name = s
+                    .split_once(" a ")
+                    .unwrap()
+                    .1
+                    .split_once(" generator")
+                    .unwrap()
+                    .0;
+                Device {
+                    name: name.to_string(),
+                    device_type: DeviceType::Generator,
+                }
+            }
+        })
+        .collect()
 }
 
 fn solve(input: &str) -> u32 {
-    todo!()
+    let floors: [Vec<Device>; 4] = input
+        .lines()
+        .take(3)
+        .map(parse_floor)
+        .chain([vec![]])
+        .collect_vec()
+        .try_into()
+        .unwrap();
+
+    let state = State {
+        floors,
+        current_floor: 0,
+    };
+
+    state.min_steps().unwrap()
 }
 
 fn main() {
-    println!("Hello, world!");
+    let input = read_to_string("practice").unwrap();
+    let output_1 = solve(&input);
+    println!("part 1: {output_1}")
 }
