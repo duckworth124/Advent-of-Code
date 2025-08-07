@@ -45,7 +45,6 @@ impl State {
     }
 
     fn apply_action(&self, action: Action) -> Option<Self> {
-        dbg!(&action);
         let mut output = self.clone();
         if self.current_floor == 0 && action.direction == Direction::Down {
             return None;
@@ -61,11 +60,10 @@ impl State {
             Direction::Up => self.current_floor + 1,
         };
         output.floors[new_floor].extend(action.holding);
+        output.current_floor = new_floor;
         if !output.is_valid() {
             return None;
         }
-        dbg!(output);
-        panic!();
 
         Some(output)
     }
@@ -74,7 +72,7 @@ impl State {
         self.floors[self.current_floor]
             .iter()
             .combinations(2)
-            .chain(self.floors.iter().map(|d| d.iter().collect()))
+            .chain(self.floors[self.current_floor].iter().map(|d| vec![d]))
             .cartesian_product(&[Direction::Up, Direction::Down])
             .map(|(v, d)| Action {
                 holding: v.iter().cloned().cloned().collect(),
@@ -88,7 +86,6 @@ impl State {
         let mut visited = HashSet::new();
         loop {
             let (current_state, time) = frontier.pop_front()?;
-            dbg!(&current_state);
             if current_state.floors.iter().take(3).all(|v| v.is_empty()) {
                 return Some(time);
             }
@@ -120,6 +117,7 @@ fn parse_floor(line: &str) -> Vec<Device> {
     let line = line.split_once("contains").unwrap().1;
     let line = line.replace("and", ",");
     line.split(',')
+        .filter(|s| s != &" ")
         .map(|s| {
             if s.contains("microchip") {
                 let name = s.split_once(" a ").unwrap().1.split_once('-').unwrap().0;
@@ -163,7 +161,7 @@ fn solve(input: &str) -> u32 {
 }
 
 fn main() {
-    let input = read_to_string("practice").unwrap();
+    let input = read_to_string("input").unwrap();
     let output_1 = solve(&input);
     println!("part 1: {output_1}")
 }

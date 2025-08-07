@@ -1,9 +1,8 @@
+use kdam::TqdmIterator;
+use regex::Regex;
 use std::cmp::max;
 use std::collections::HashSet;
 use std::fs::read_to_string;
-
-use kdam::TqdmIterator;
-use regex::Regex;
 
 enum Action {
     DoNothing,
@@ -21,8 +20,8 @@ struct Resources {
 }
 
 impl Resources {
-    fn new() -> Self {
-        Resources {
+    const fn new() -> Self {
+        Self {
             ore: 0,
             clay: 0,
             obsidian: 0,
@@ -39,8 +38,8 @@ struct Robots {
 }
 
 impl Robots {
-    fn new() -> Self {
-        Robots {
+    const fn new() -> Self {
+        Self {
             ore_collecting: 1,
             clay_collecting: 0,
             obsidian_collecting: 0,
@@ -57,8 +56,8 @@ struct State {
 }
 
 impl State {
-    fn new(remaining_time: u16) -> Self {
-        State {
+    const fn new(remaining_time: u16) -> Self {
+        Self {
             remaining_time,
             resources: Resources::new(),
             robots: Robots::new(),
@@ -70,7 +69,7 @@ impl State {
         max_so_far: &mut u16,
         current_geodes: u16,
         blueprint: &Blueprint,
-        visited: &mut HashSet<State>,
+        visited: &mut HashSet<Self>,
     ) -> u16 {
         *max_so_far = max(*max_so_far, current_geodes);
         if !visited.insert(self.clone()) {
@@ -172,7 +171,7 @@ impl State {
         (new_state, geodes)
     }
 
-    fn get_potential(&self) -> u16 {
+    const fn get_potential(&self) -> u16 {
         self.remaining_time * (self.remaining_time - 1) / 2
     }
 }
@@ -208,7 +207,7 @@ impl Blueprint {
         let obsidian_robot_cost = (nums[3], nums[4]);
         let geode_robot_cost = (nums[5], nums[6]);
 
-        Blueprint {
+        Self {
             id,
             obsidian_robot_cost,
             geode_robot_cost,
@@ -222,7 +221,7 @@ struct Blueprints(Vec<Blueprint>);
 
 impl Blueprints {
     fn new(input: &str) -> Self {
-        let blueprints = Blueprints(input.lines().map(Blueprint::new).collect());
+        let blueprints = Self(input.lines().map(Blueprint::new).collect());
         blueprints
     }
 }

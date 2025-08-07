@@ -3,7 +3,7 @@ use winnow::{
     Parser, Result,
     ascii::dec_uint,
     combinator::{repeat, separated, terminated},
-    error::{ContextError, ParseError},
+    error::ContextError,
 };
 
 struct Node {
@@ -47,10 +47,10 @@ impl Node {
 }
 
 impl FromStr for Node {
-    type Err = ParseError<&str, ContextError>;
+    type Err = ContextError;
 
-    fn from_str(mut s: &str) -> Result<Self, ParseError<&str, ContextError>> {
-        Self::parse_next.parse(s)
+    fn from_str(mut s: &str) -> std::result::Result<Self, Self::Err> {
+        Self::parse_next(&mut s)
     }
 }
 

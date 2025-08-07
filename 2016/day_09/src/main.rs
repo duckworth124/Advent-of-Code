@@ -13,7 +13,7 @@ fn decrompressed_len(mut input: &str, recursive: bool) -> usize {
             let expanded_len = if recursive {
                 decrompressed_len(s, recursive)
             } else {
-                s.len()
+                len
             };
             output += expanded_len * count;
             input = &input[len..];
