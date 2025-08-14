@@ -1,0 +1,21 @@
+d=170*15 + a
+loop
+  a=d
+  while a != 0
+    b=a
+    a=0
+    c=2
+    jnz b 2
+    jnz 1 6
+    b--
+    c--
+    jnz c -4
+    inc a
+    jnz 1 -7
+    b=2
+    jnz c 2
+    jnz 1 4
+    b--
+    c--
+    jnz 1 -4
+    out b

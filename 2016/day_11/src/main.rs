@@ -1,16 +1,14 @@
 use itertools::Itertools;
-use std::{
-    collections::{HashSet, VecDeque},
-    fs::read_to_string,
-};
+use priority_queue::PriorityQueue;
+use std::{cmp::Reverse, collections::HashSet, fs::read_to_string};
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, PartialOrd, Ord)]
 enum DeviceType {
     Microchip,
     Generator,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 struct Device {
     name: String,
     device_type: DeviceType,
@@ -65,6 +63,8 @@ impl State {
             return None;
         }
 
+        output.floors.iter_mut().for_each(|v| v.sort());
+
         Some(output)
     }
 
@@ -75,17 +75,18 @@ impl State {
             .chain(self.floors[self.current_floor].iter().map(|d| vec![d]))
             .cartesian_product(&[Direction::Up, Direction::Down])
             .map(|(v, d)| Action {
-                holding: v.iter().cloned().cloned().collect(),
+                holding: v.into_iter().cloned().collect(),
                 direction: *d,
             })
             .collect()
     }
 
     fn min_steps(&self) -> Option<u32> {
-        let mut frontier = VecDeque::from([(self.clone(), 0)]);
+        let mut frontier: PriorityQueue<(Self, u32), Reverse<u32>> =
+            PriorityQueue::from_iter([((self.clone(), 0), Reverse(0))]);
         let mut visited = HashSet::new();
         loop {
-            let (current_state, time) = frontier.pop_front()?;
+            let ((current_state, time), _) = frontier.pop()?;
             if current_state.floors.iter().take(3).all(|v| v.is_empty()) {
                 return Some(time);
             }
@@ -96,8 +97,20 @@ impl State {
                 .possible_actions()
                 .into_iter()
                 .filter_map(|a| current_state.apply_action(a))
-                .for_each(|s| frontier.push_back((s, time + 1)));
+                .for_each(|s| {
+                    frontier
+                        .push_increase((s.clone(), time + 1), Reverse(time + 1 + s.heuristic()));
+                });
         }
+    }
+
+    fn heuristic(&self) -> u32 {
+        self.floors
+            .iter()
+            .take(3)
+            .enumerate()
+            .map(|(i, v)| v.len() / 2 + v.len() % 2 - (i == self.current_floor) as usize)
+            .sum::<usize>() as u32
     }
 }
 
@@ -142,7 +155,7 @@ fn parse_floor(line: &str) -> Vec<Device> {
         .collect()
 }
 
-fn solve(input: &str) -> u32 {
+fn solve(input: &str) -> (u32, u32) {
     let floors: [Vec<Device>; 4] = input
         .lines()
         .take(3)
@@ -152,16 +165,39 @@ fn solve(input: &str) -> u32 {
         .try_into()
         .unwrap();
 
-    let state = State {
+    let mut state = State {
         floors,
         current_floor: 0,
     };
 
-    state.min_steps().unwrap()
+    let output_1 = state.min_steps().unwrap();
+
+    state.floors[0].extend([
+        Device {
+            name: "elerium".to_string(),
+            device_type: DeviceType::Generator,
+        },
+        Device {
+            name: "elerium".to_string(),
+            device_type: DeviceType::Microchip,
+        },
+        Device {
+            name: "dilithium".to_string(),
+            device_type: DeviceType::Generator,
+        },
+        Device {
+            name: "dilithium".to_string(),
+            device_type: DeviceType::Microchip,
+        },
+    ]);
+
+    let output_2 = state.min_steps().unwrap();
+
+    (output_1, output_2)
 }
 
 fn main() {
     let input = read_to_string("input").unwrap();
-    let output_1 = solve(&input);
-    println!("part 1: {output_1}")
+    let (output_1, output_2) = solve(&input);
+    println!("part 1: {output_1} part 2: {output_2}")
 }

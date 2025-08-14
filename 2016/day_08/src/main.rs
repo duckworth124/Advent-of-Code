@@ -1,8 +1,8 @@
 use std::{fmt::Display, fs::read_to_string};
 use winnow::{
-    Parser, Result,
     ascii::dec_uint,
     combinator::{alt, separated_pair},
+    Parser, Result,
 };
 
 struct Grid([[bool; 50]; 6]);
@@ -34,7 +34,11 @@ impl Display for Grid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in &self.0 {
             for b in row {
-                if *b { write!(f, "#")? } else { write!(f, ".")? }
+                if *b {
+                    write!(f, "#")?
+                } else {
+                    write!(f, ".")?
+                }
             }
             writeln!(f)?
         }

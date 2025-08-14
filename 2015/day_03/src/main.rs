@@ -1,7 +1,6 @@
+use itertools::Itertools;
 use std::fs::read_to_string;
 use std::ops::Add;
-
-use itertools::Itertools;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default)]
 struct Position {

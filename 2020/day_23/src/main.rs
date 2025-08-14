@@ -1,7 +1,8 @@
 use std::{fmt::Display, fs::read_to_string};
 
+#[derive(Clone)]
 struct State {
-    cups: Vec<u8>,
+    cups: Vec<u32>,
 }
 
 impl State {
@@ -33,9 +34,9 @@ impl Display for State {
             .iter()
             .copied()
             .cycle()
-            .skip_while(|&c| c != 1)
+            .skip_while(|c| *c != 1)
             .skip(1)
-            .take_while(|&c| c != 1)
+            .take(8)
         {
             write!(f, "{c}")?
         }
@@ -44,10 +45,7 @@ impl Display for State {
 }
 
 fn solve(input: &str) -> String {
-    let cups: Vec<u8> = input
-        .chars()
-        .map(|c| c.to_digit(10).unwrap() as u8)
-        .collect();
+    let cups: Vec<u32> = input.chars().map(|c| c.to_digit(10).unwrap()).collect();
 
     let mut state = State { cups };
     state.cups.rotate_left(1);

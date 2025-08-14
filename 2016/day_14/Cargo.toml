@@ -1,0 +1,8 @@
+[package]
+name = "day_14"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+fancy-regex = "0.16.1"
+md5 = "0.8.0"

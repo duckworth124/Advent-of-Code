@@ -1,53 +1,32 @@
-use std::fs::read_to_string;
-use tqdm::Iter;
+use std::{collections::VecDeque, fs::read_to_string};
 
 struct State {
-    marbles: Vec<u32>,
+    marbles: VecDeque<u32>,
     scores: Vec<u32>,
-    current_marble_position: usize,
-    next_marble_value: u32,
-    player: usize,
+    next: u32,
 }
 
 impl State {
     fn step(&mut self) {
-        if self.next_marble_value <= 1 {
-            self.marbles.push(self.next_marble_value);
-            self.current_marble_position = self.marbles.len() - 1;
-        } else if self.next_marble_value % 23 == 0 {
-            self.scores[self.player] += self.next_marble_value;
-
-            let next_index =
-                (self.current_marble_position + self.marbles.len() - 7) % self.marbles.len();
-
-            self.scores[self.player] += self.marbles[next_index];
-            self.marbles.remove(next_index);
-            self.current_marble_position = next_index;
-        } else {
-            let next_index = (self.current_marble_position + 2) % self.marbles.len();
-            self.marbles.insert(next_index, self.next_marble_value);
-            self.current_marble_position = next_index;
+        if self.next % 23 == 0 {
+            let player = self.next as usize % self.scores.len();
+            self.scores[player] += self.next;
+            self.marbles.rotate_right(7);
+            let marble = self.marbles.pop_back().unwrap();
+            self.scores[player] += marble;
+            self.marbles.rotate_left(1);
+            self.next += 1;
+            return;
         }
-
-        self.next_marble_value += 1;
-        self.player += 1;
-        self.player %= self.scores.len();
-    }
-
-    fn new(num_players: usize) -> Self {
-        Self {
-            marbles: vec![],
-            current_marble_position: 0,
-            player: 0,
-            next_marble_value: 0,
-            scores: vec![0; num_players],
-        }
+        self.marbles.rotate_left(1);
+        self.marbles.push_back(self.next);
+        self.next += 1;
     }
 }
 
 fn solve(input: &str) -> (u32, u32) {
-    let num_players: usize = input.split_once(' ').unwrap().0.parse().unwrap();
-    let max_marble_value: u32 = input
+    let players: usize = input.split_once(' ').unwrap().0.parse().unwrap();
+    let max_marble: u32 = input
         .split_once("worth ")
         .unwrap()
         .1
@@ -57,19 +36,23 @@ fn solve(input: &str) -> (u32, u32) {
         .parse()
         .unwrap();
 
-    let mut state = State::new(num_players);
-    for _ in 0..=max_marble_value {
+    let mut state = State {
+        marbles: VecDeque::from([0]),
+        scores: vec![0; players],
+        next: 1,
+    };
+
+    for _ in 0..max_marble {
         state.step();
     }
 
-    let output_1 = *state.scores.iter().max().unwrap();
-    dbg!(state.scores);
+    let output_1 = state.scores.iter().copied().max().unwrap();
 
-    let mut state = State::new(num_players);
-    for _ in (0..=max_marble_value * 100).tqdm() {
+    for _ in 0..max_marble * 99 {
         state.step();
     }
-    let output_2 = *state.scores.iter().max().unwrap();
+
+    let output_2 = state.scores.iter().copied().max().unwrap();
 
     (output_1, output_2)
 }

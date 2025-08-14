@@ -1,0 +1,16 @@
+a=1
+b=1
+d=26
+c=7
+d+=c
+repeat d times
+  c=a
+  a+=b
+  b=c
+cpy 18 c
+cpy 11 d
+inc a
+dec d
+jnz d -2
+dec c
+jnz c -5
