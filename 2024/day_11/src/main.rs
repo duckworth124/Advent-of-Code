@@ -6,9 +6,9 @@ fn update(stone: u64) -> Vec<u64> {
         return vec![1];
     }
 
-    let num_digits = stone.ilog10();
+    let num_digits = stone.ilog10() + 1;
     if num_digits % 2 == 0 {
-        let d = 10u64.pow(num_digits);
+        let d = 10u64.pow(num_digits / 2);
         let (l, r) = (stone / d, stone % d);
         return vec![l, r];
     }

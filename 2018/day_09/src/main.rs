@@ -60,5 +60,5 @@ fn solve(input: &str) -> (u32, u32) {
 fn main() {
     let input = read_to_string("input").unwrap();
     let (output_1, output_2) = solve(&input);
-    println!("part 1: {output_1} part 2: {output_2}")
+    println!("part 1: {output_1} part 2: {output_2}");
 }

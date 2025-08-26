@@ -1,8 +1,8 @@
 [package]
-name = "day_23"
+name = "day_16"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 itertools = "0.14.0"
-tqdm = "0.8.0"
+winnow = "0.7.13"
