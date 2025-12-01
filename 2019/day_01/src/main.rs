@@ -1,12 +1,9 @@
-use std::fs::read_to_string;
+use std::{fs::read_to_string, iter};
 
 fn fuel(mass: u32) -> u32 {
-    if mass == 0 {
-        0
-    } else {
-        let f = (mass / 3).saturating_sub(2);
-        f + fuel(f)
-    }
+    iter::successors(Some(mass), |m| Some((m / 3).saturating_sub(2)))
+        .take_while(|&x| x > 0)
+        .sum()
 }
 
 fn main() {

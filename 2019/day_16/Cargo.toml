@@ -1,0 +1,8 @@
+[package]
+name = "day_16"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rayon = "1.11.0"
+tqdm = "0.8.0"

@@ -1,86 +1,94 @@
 use itertools::Itertools;
 use std::{fmt::Display, fs::read_to_string};
-use tqdm::Iter;
 
-#[derive(Clone)]
 struct State {
-    cups: Vec<u32>,
+    connections: Vec<usize>,
+    current_cup: usize,
 }
 
 impl State {
     fn step(&mut self) {
-        let to_move = &self.cups[..3];
-        let current = *self.cups.last().unwrap();
-        let mut destination = current - 1;
+        let first_removed = self.next(self.current_cup);
+        let last_removed = self.next(self.next(first_removed));
+        let after_removed = self.next(last_removed);
+        let removed = [first_removed, self.next(first_removed), last_removed];
+        let mut destination = self.current_cup - 1;
         loop {
             if destination == 0 {
-                destination = *self.cups.iter().max().unwrap();
+                destination = self.connections.len() - 1;
                 continue;
             }
-            if to_move.contains(&destination) {
+            if removed.contains(&destination) {
                 destination -= 1;
                 continue;
             }
             break;
         }
-        let i = self.cups.iter().position(|x| *x == destination).unwrap();
-        self.cups = [&self.cups[3..=i], to_move, &self.cups[i + 1..]].concat();
-        self.cups.rotate_left(1);
+        let after_destination = self.next(destination);
+        self.connections[self.current_cup] = after_removed;
+        self.connections[destination] = first_removed;
+        self.connections[last_removed] = after_destination;
+        self.current_cup = self.next(self.current_cup);
     }
 
-    fn after_1(&self) -> (u32, u32) {
-        self.cups
-            .iter()
-            .copied()
-            .cycle()
-            .skip_while(|c| *c != 1)
-            .skip(1)
-            .take(2)
-            .collect_tuple()
-            .unwrap()
+    fn next(&self, from: usize) -> usize {
+        self.connections[from]
     }
 }
 
 impl Display for State {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for c in self
-            .cups
-            .iter()
-            .copied()
-            .cycle()
-            .skip_while(|c| *c != 1)
-            .skip(1)
-            .take(8)
-        {
-            write!(f, "{c}")?
+        let mut current = self.next(1);
+        while current != 1 {
+            write!(f, "{current}")?;
+            current = self.next(current)
         }
         Ok(())
     }
 }
 
-fn solve(input: &str) -> (String, u32) {
-    let cups: Vec<u32> = input.chars().map(|c| c.to_digit(10).unwrap()).collect();
-
-    let mut state = State { cups: cups.clone() };
-    state.cups.rotate_left(1);
+fn solve(input: &str) -> (String, usize) {
+    let mut connections = vec![0; 10];
+    for (l, r) in input
+        .chars()
+        .collect_vec()
+        .into_iter()
+        .map(|c| c as usize - '0' as usize)
+        .circular_tuple_windows()
+    {
+        connections[l] = r;
+    }
+    let first = input.chars().next().unwrap() as usize - '0' as usize;
+    let last = input.chars().last().unwrap() as usize - '0' as usize;
+    let mut state = State {
+        connections: connections.clone(),
+        current_cup: first,
+    };
     for _ in 0..100 {
         state.step();
     }
-
     let output_1 = state.to_string();
-    let mut state = State { cups };
-    state.cups.extend(10..=1_000_000);
-    for _ in (0..10_000_000).tqdm() {
+
+    connections[last] = 10;
+    connections.extend(11..=1_000_000);
+    connections.push(first);
+    state = State {
+        current_cup: first,
+        connections,
+    };
+
+    for _ in 0..10_000_000 {
         state.step();
     }
-    let (l, r) = state.after_1();
+
+    let l = state.next(1);
+    let r = state.next(l);
     let output_2 = l * r;
 
     (output_1, output_2)
 }
-
 fn main() {
-    let input = read_to_string("practice").unwrap();
+    let input = read_to_string("input").unwrap();
     let (output_1, output_2) = solve(input.trim());
     println!("part 1: {output_1} part 2: {output_2}")
 }

@@ -14,7 +14,7 @@ struct Position {
 }
 
 impl Position {
-    fn components(self) -> [(Direction, usize); 2] {
+    const fn components(self) -> [(Direction, usize); 2] {
         let (hd, hl) = match self.x {
             ..=-1 => (Direction::Left, self.x.unsigned_abs() as usize),
             _ => (Direction::Right, self.x.unsigned_abs() as usize),

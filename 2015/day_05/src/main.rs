@@ -1,14 +1,13 @@
 use std::fs::read_to_string;
 
-use fancy_regex::Regex;
+use itertools::Itertools;
 
 fn is_vowel(c: char) -> bool {
     ['a', 'e', 'i', 'o', 'u'].contains(&c)
 }
 
 fn contains_double(s: &str) -> bool {
-    let pat = Regex::new(r"(.)\1").unwrap();
-    pat.is_match(s).unwrap()
+    s.chars().tuple_windows().any(|(x, y)| x == y)
 }
 
 fn does_not_contain_bad_strings(s: &str) -> bool {
@@ -22,13 +21,13 @@ fn is_nice(s: &str) -> bool {
 }
 
 fn contains_disjoint_pair(s: &str) -> bool {
-    let pat = Regex::new(r"(..).*\1").unwrap();
-    pat.is_match(s).unwrap()
+    (0..s.len() - 2)
+        .map(|i| (&s[i..i + 2], &s[i + 2..]))
+        .any(|(x, y)| y.contains(x))
 }
 
 fn contains_sandwich(s: &str) -> bool {
-    let pat = Regex::new(r"(.).\1").unwrap();
-    pat.is_match(s).unwrap()
+    s.chars().tuple_windows().any(|(x, _, y)| x == y)
 }
 
 fn is_nice_2(s: &str) -> bool {

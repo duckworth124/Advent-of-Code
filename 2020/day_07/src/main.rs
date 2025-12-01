@@ -53,7 +53,6 @@ fn can_contain(outer: &str, inner: &str, rules: &HashMap<&str, HashMap<&str, usi
 }
 
 fn count_bags_inside(colour: &str, rules: &HashMap<&str, HashMap<&str, usize>>) -> usize {
-    dbg!(colour);
     let contained = &rules[colour];
     contained.values().sum::<usize>()
         + contained

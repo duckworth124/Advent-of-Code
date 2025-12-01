@@ -29,7 +29,7 @@ enum Direction {
 }
 
 impl Direction {
-    fn rotate_right(self) -> Self {
+    const fn rotate_right(self) -> Self {
         match self {
             Self::Up => Self::Right,
             Self::Right => Self::Down,

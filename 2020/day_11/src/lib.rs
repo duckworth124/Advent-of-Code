@@ -28,10 +28,6 @@ impl Position {
         .map(|(x, y)| Self { x, y })
         .map(|p| self + p)
     }
-
-    fn is_in_bounds(self, width: i32, height: i32) -> bool {
-        (0..width).contains(&self.x) && (0..height).contains(&self.y)
-    }
 }
 
 impl From<Direction> for Position {
@@ -87,7 +83,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    fn all() -> [Self; 8] {
+    const fn all() -> [Self; 8] {
         [
             Self::Up,
             Self::Down,

@@ -45,7 +45,7 @@ impl Instruction {
         separated_list0(newline, Self::parse).parse(input)
     }
 
-    fn flip(&mut self) {
+    const fn flip(&mut self) {
         *self = match self {
             Self::Nop(n) => Self::Jmp(*n),
             Self::Jmp(n) => Self::Nop(*n),

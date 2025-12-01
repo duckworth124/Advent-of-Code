@@ -1,5 +1,4 @@
 use std::{fs::read_to_string, time::Instant};
-
 use winnow::{
     ascii::dec_uint,
     combinator::{repeat, repeat_till},
@@ -220,7 +219,7 @@ fn solve(path: &str) -> (String, u64) {
         program_counter: 0,
         ..cpu
     };
-    debug_assert_eq!(cpu.run(), cpu.instructions);
+    assert_eq!(cpu.run(), cpu.instructions);
     (output_1, output_2)
 }
 

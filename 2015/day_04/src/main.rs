@@ -5,7 +5,7 @@ fn find(input: &str, n: usize) -> usize {
         .map(|s| format!("{input}{s}"))
         .map(compute)
         .map(|x| format!("{x:x}"))
-        .position(|s| s.starts_with(&vec!["0"; n].concat()))
+        .position(|s| s.bytes().take(n).all(|b| b == b'0'))
         .unwrap()
 }
 

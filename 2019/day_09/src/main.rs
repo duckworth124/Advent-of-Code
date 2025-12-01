@@ -1,8 +1,11 @@
-use std::{collections::VecDeque, fs::read_to_string};
+use std::{
+    collections::{HashMap, VecDeque},
+    fs::read_to_string,
+};
 
 #[derive(Default, Clone)]
 struct Icpu {
-    data: Vec<i64>,
+    data: HashMap<usize, i64>,
     pc: usize,
     inputs: VecDeque<i64>,
     outputs: Vec<i64>,
@@ -11,6 +14,7 @@ struct Icpu {
 
 impl Icpu {
     fn new(data: Vec<i64>) -> Self {
+        let data = data.into_iter().enumerate().collect();
         Self {
             data,
             ..Default::default()
@@ -18,7 +22,7 @@ impl Icpu {
     }
 
     fn step(&mut self) -> bool {
-        let op = self.data[self.pc];
+        let op = self.get(self.pc);
         match op % 100 {
             1 => {
                 let par1 = self.get_param(1, op);
@@ -36,7 +40,7 @@ impl Icpu {
 
             3 => {
                 let input = self.inputs.pop_front().unwrap();
-                self.write(3, op, input);
+                self.write(1, op, input);
                 self.pc += 2;
             }
 
@@ -99,55 +103,61 @@ impl Icpu {
         true
     }
 
-    fn get_param(&mut self, param_number: usize, op: i64) -> i64 {
+    fn get_param(&self, param_number: usize, op: i64) -> i64 {
         let mode = (op / (10_i64.pow(1 + param_number as u32))) % 10;
-        let val = self.data[self.pc + param_number];
+        let val = self.data[&(self.pc + param_number)];
         if mode == 1 {
             val
         } else if mode == 2 {
             let address = (val + self.relative_base) as usize;
-            *self.get_or_extend(address)
+            self.get(address)
         } else {
             let address = val as usize;
-            *self.get_or_extend(address)
+            self.get(address)
         }
     }
 
     fn write(&mut self, param_number: usize, op: i64, value: i64) {
         let mode = (op / (10_i64.pow(1 + param_number as u32))) % 10;
-        let val = self.data[self.pc + param_number];
+        let val = self.data[&(self.pc + param_number)];
         if mode == 2 {
             let address = (val + self.relative_base) as usize;
-            *self.get_or_extend(address) = value
+            *self.get_mut(address) = value
         } else {
             let address = val as usize;
-            *self.get_or_extend(address) = value
+            *self.get_mut(address) = value
         }
     }
 
-    fn get_or_extend(&mut self, address: usize) -> &mut i64 {
-        if address >= self.data.len() {
-            self.data.resize(address + 1, 0);
-        }
-
-        self.data.get_mut(address).unwrap()
+    fn get_mut(&mut self, address: usize) -> &mut i64 {
+        self.data.entry(address).or_default()
     }
 
-    fn run(&mut self) {
-        while self.step() {}
+    fn get(&self, address: usize) -> i64 {
+        self.data.get(&address).copied().unwrap_or_default()
+    }
+
+    fn get_output(&mut self) -> Option<i64> {
+        loop {
+            let output = self.outputs.pop();
+            if output.is_some() {
+                return output;
+            }
+            if !self.step() {
+                return None;
+            }
+        }
     }
 }
 
 fn solve(data: Vec<i64>) -> (i64, i64) {
     let mut icpu = Icpu::new(data.clone());
     icpu.inputs.push_back(1);
-    icpu.run();
-    let output_1 = *icpu.outputs.last().unwrap();
+    let output_1 = icpu.get_output().unwrap();
 
     icpu = Icpu::new(data);
     icpu.inputs.push_back(2);
-    icpu.run();
-    let output_2 = *icpu.outputs.last().unwrap();
+    let output_2 = icpu.get_output().unwrap();
     (output_1, output_2)
 }
 

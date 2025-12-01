@@ -1,13 +1,10 @@
-use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{line_ending, u32},
-    combinator::value,
-    multi::separated_list0,
-    sequence::separated_pair,
-    IResult, Parser,
-};
 use std::fs::read_to_string;
+
+use winnow::{
+    ascii::{dec_uint, line_ending},
+    combinator::{alt, separated, separated_pair},
+    Parser, Result,
+};
 
 #[derive(Clone, Copy)]
 struct Range2D {
@@ -18,20 +15,19 @@ struct Range2D {
 }
 
 impl Range2D {
-    fn parse(input: &str) -> IResult<&str, Self> {
+    fn parse(input: &mut &str) -> Result<Self> {
         separated_pair(
-            separated_pair(u32, tag(","), u32),
-            tag(" through "),
-            separated_pair(u32, tag(","), u32),
+            separated_pair(dec_uint, ",", dec_uint),
+            " through ",
+            separated_pair(dec_uint, ",", dec_uint),
         )
-        .map(|((a, b), (c, d))| (a as usize, b as usize, c as usize, d as usize))
-        .map(|(min_x, min_y, max_x, max_y)| Self {
+        .map(|((min_x, min_y), (max_x, max_y))| Self {
             min_x,
             min_y,
             max_x,
             max_y,
         })
-        .parse(input)
+        .parse_next(input)
     }
 }
 
@@ -43,20 +39,20 @@ enum InstructionType {
 }
 
 impl InstructionType {
-    fn parse_on(input: &str) -> IResult<&str, Self> {
-        value(Self::On, tag("turn on")).parse(input)
+    fn parse_on(input: &mut &str) -> Result<Self> {
+        ("turn on").value(Self::On).parse_next(input)
     }
 
-    fn parse_off(input: &str) -> IResult<&str, Self> {
-        value(Self::Off, tag("turn off")).parse(input)
+    fn parse_off(input: &mut &str) -> Result<Self> {
+        ("turn off").value(Self::Off).parse_next(input)
     }
 
-    fn parse_toggle(input: &str) -> IResult<&str, Self> {
-        value(Self::Toggle, tag("toggle")).parse(input)
+    fn parse_toggle(input: &mut &str) -> Result<Self> {
+        ("toggle").value(Self::Toggle).parse_next(input)
     }
 
-    fn parse(input: &str) -> IResult<&str, Self> {
-        alt((Self::parse_on, Self::parse_off, Self::parse_toggle)).parse(input)
+    fn parse(input: &mut &str) -> Result<Self> {
+        alt((Self::parse_on, Self::parse_off, Self::parse_toggle)).parse_next(input)
     }
 }
 
@@ -67,31 +63,32 @@ struct Instruction {
 }
 
 impl Instruction {
-    fn parse(input: &str) -> IResult<&str, Self> {
-        separated_pair(InstructionType::parse, tag(" "), Range2D::parse)
+    fn parse(input: &mut &str) -> Result<Self> {
+        separated_pair(InstructionType::parse, " ", Range2D::parse)
             .map(|(instruction_type, range)| Self {
                 instruction_type,
                 range,
             })
-            .parse(input)
+            .parse_next(input)
     }
 }
 
 struct Instructions(Vec<Instruction>);
 
 impl Instructions {
-    fn parse(input: &str) -> IResult<&str, Self> {
-        separated_list0(line_ending, Instruction::parse)
+    fn parse(input: &mut &str) -> Result<Self> {
+        separated(0.., Instruction::parse, line_ending)
             .map(Self)
-            .parse(input)
+            .parse_next(input)
     }
 }
 
-struct GridBool(Box<[[bool; 1000]; 1000]>);
+struct GridBool([[bool; 1000]; 1000]);
 
 impl GridBool {
-    fn new() -> Self {
-        Self(Box::new([[false; 1000]; 1000]))
+    #[allow(clippy::large_stack_frames)]
+    const fn new() -> Self {
+        Self([[false; 1000]; 1000])
     }
 
     fn apply(&mut self, instruction: Instruction) {
@@ -117,11 +114,12 @@ impl GridBool {
     }
 }
 
-struct GridInt(Box<[[u32; 1000]; 1000]>);
+struct GridInt([[u32; 1000]; 1000]);
 
 impl GridInt {
-    fn new() -> Self {
-        Self(Box::new([[0; 1000]; 1000]))
+    #[allow(clippy::large_stack_frames)]
+    const fn new() -> Self {
+        Self([[0; 1000]; 1000])
     }
 
     fn apply(&mut self, instruction: Instruction) {
@@ -147,10 +145,11 @@ impl GridInt {
     }
 }
 
+#[allow(clippy::large_stack_frames)]
 fn solve(path: &str) -> (usize, u32) {
     let input = read_to_string(path).unwrap();
     let mut grid = GridBool::new();
-    let instructions = Instructions::parse(&input).unwrap().1;
+    let instructions = Instructions::parse.parse(input.trim()).unwrap();
     grid.apply_all(&instructions);
     let output_1 = grid.count_on();
     let mut grid = GridInt::new();

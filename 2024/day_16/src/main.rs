@@ -59,11 +59,11 @@ enum Action {
 }
 
 impl Action {
-    fn all() -> [Self; 3] {
+    const fn all() -> [Self; 3] {
         [Self::GoForward, Self::TurnLeft, Self::TurnRight]
     }
 
-    fn cost(self) -> u32 {
+    const fn cost(self) -> u32 {
         match self {
             Self::GoForward => 1,
             _ => 1000,

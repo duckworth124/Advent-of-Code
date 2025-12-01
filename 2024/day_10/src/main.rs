@@ -78,7 +78,7 @@ fn process_input(input: &str) -> HashMap<u32, HashSet<Position>> {
 fn total_scores(positions: &HashMap<u32, HashSet<Position>>) -> usize {
     let mut reachable_trailheads: HashMap<Position, HashSet<Position>> = positions[&0]
         .iter()
-        .map(|&p| (p, [p].into_iter().collect()))
+        .map(|&p| (p, std::iter::once(p).collect()))
         .collect();
 
     for height in 1..=9 {
