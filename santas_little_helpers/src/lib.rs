@@ -1,5 +1,4 @@
 #[allow(dead_code)]
-
 mod lib {
     pub mod positions_and_friends {
         use std::ops::{Add, Neg, Sub};
@@ -65,7 +64,7 @@ mod lib {
         }
 
         impl Direction {
-            fn rotate_right(self) -> Self {
+            const fn rotate_right(self) -> Self {
                 match self {
                     Self::Up => Self::Right,
                     Self::Right => Self::Down,
@@ -74,11 +73,11 @@ mod lib {
                 }
             }
 
-            fn rotate_left(self) -> Self {
+            const fn rotate_left(self) -> Self {
                 self.rotate_right().rotate_right().rotate_right()
             }
 
-            fn opposite(self) -> Self {
+            const fn opposite(self) -> Self {
                 self.rotate_right().rotate_right()
             }
         }
@@ -92,14 +91,14 @@ mod lib {
         };
 
         fn all_numbers_i32(input: &str) -> Vec<i32> {
-            many0(many_till(anychar::<&str, ()>, i32).map(|(_, x)| x))
+            many0(many_till(anychar::<_, ()>, i32).map(|(_, x)| x))
                 .parse(input)
                 .unwrap()
                 .1
         }
 
         fn all_numbers_u32(input: &str) -> Vec<u32> {
-            many0(many_till(anychar::<&str, ()>, u32).map(|(_, x)| x))
+            many0(many_till(anychar::<_, ()>, u32).map(|(_, x)| x))
                 .parse(input)
                 .unwrap()
                 .1
