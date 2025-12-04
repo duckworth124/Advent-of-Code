@@ -1,42 +1,64 @@
-use itertools::{Itertools, iproduct};
+use itertools::iproduct;
 use std::{fs::read_to_string, time::Instant};
 
-fn can_be_removed(grid: &[Vec<char>]) -> Vec<(usize, usize)> {
-    let mut output = vec![];
-    let height = grid.len();
-    let width = grid[0].len();
-    for y in 0..height {
-        for x in 0..width {
-            if grid[y][x] == '@'
-                && iproduct!(
-                    y.saturating_sub(1)..=(y + 1).min(height - 1),
-                    x.saturating_sub(1)..=(x + 1).min(width - 1)
-                )
-                .unique()
-                .map(|(y, x)| grid[y][x])
-                .filter(|&c| c == '@')
-                .count()
-                    <= 4
-            {
-                output.push((x, y));
-            }
-        }
-    }
-    output
+struct Tile {
+    occupied: bool,
+    surrounding_occupied: usize,
 }
 
 fn solve(input: &str) -> (usize, usize) {
-    let mut grid: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
-    let mut to_remove = can_be_removed(&grid);
-    let output_1 = to_remove.len();
-    let mut output_2 = 0;
-    while !to_remove.is_empty() {
-        output_2 += to_remove.len();
-        for (x, y) in to_remove {
-            grid[y][x] = '.';
+    let mut grid: Vec<Vec<Tile>> = input
+        .lines()
+        .map(|l| {
+            l.chars()
+                .map(|_| Tile {
+                    occupied: false,
+                    surrounding_occupied: 0,
+                })
+                .collect()
+        })
+        .collect();
+
+    let width = grid[0].len();
+    let height = grid.len();
+
+    for (y, line) in input.lines().enumerate() {
+        for (x, c) in line.char_indices() {
+            if c == '@' {
+                grid[y][x].occupied = true;
+                (y.saturating_sub(1)..=(y + 1).min(height - 1)).for_each(|y| {
+                    for x in x.saturating_sub(1)..=(x + 1).min(width - 1) {
+                        grid[y][x].surrounding_occupied += 1
+                    }
+                });
+            }
         }
-        to_remove = can_be_removed(&grid)
     }
+    let output_1 = grid
+        .iter()
+        .flatten()
+        .filter(|t| t.occupied && t.surrounding_occupied <= 4)
+        .count();
+
+    let mut output_2 = 0;
+    let mut frontier: Vec<(usize, usize)> = iproduct!(0..width, 0..height).collect();
+    while let Some((x, y)) = frontier.pop() {
+        if !grid[y][x].occupied {
+            continue;
+        }
+        if grid[y][x].surrounding_occupied >= 5 {
+            continue;
+        }
+        grid[y][x].occupied = false;
+        output_2 += 1;
+        (y.saturating_sub(1)..=(y + 1).min(height - 1)).for_each(|y| {
+            for x in x.saturating_sub(1)..=(x + 1).min(width - 1) {
+                grid[y][x].surrounding_occupied -= 1;
+                frontier.push((x, y));
+            }
+        });
+    }
+
     (output_1, output_2)
 }
 
