@@ -21,7 +21,7 @@ fn all_replacements(input: &str, rules: &HashMap<String, Vec<String>>) -> HashSe
         .collect()
 }
 
-fn all_replacements_pruned(input: &str, rules: &HashMap<String, Vec<String>>) -> HashSet<String> {
+fn all_replacements_pruned(input: &str, rules: &HashMap<String, Vec<String>>) -> Vec<String> {
     for i in 0..input.len() {
         for j in i..input.len() {
             if let Some(output) = all_replacements_if_forced(input, (i, j), rules) {
@@ -46,7 +46,7 @@ fn all_replacements_if_forced(
     input: &str,
     (i, j): (usize, usize),
     rules: &HashMap<String, Vec<String>>,
-) -> Option<HashSet<String>> {
+) -> Option<Vec<String>> {
     let s = &input[i..=j];
     if !is_forced_replacement(s, rules) {
         return None;
