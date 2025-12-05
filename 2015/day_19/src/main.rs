@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     fs::read_to_string,
+    time::Instant,
 };
 
 fn replace_prefix(input: &str, prefix: &str, new: &str) -> Option<String> {
@@ -20,18 +21,18 @@ fn all_replacements(input: &str, rules: &HashMap<String, Vec<String>>) -> HashSe
         .collect()
 }
 
-fn all_replacements_pruned(input: &str, rules: &HashMap<String, Vec<String>>) -> Vec<String> {
-    let things_we_reduce_immediately = ["Ca", "Ti", "Y"];
+fn all_replacements_pruned(input: &str, rules: &HashMap<String, Vec<String>>) -> HashSet<String> {
+    for i in 0..input.len() {
+        for j in i..input.len() {
+            if let Some(output) = all_replacements_if_forced(input, (i, j), rules) {
+                return output;
+            }
+        }
+    }
+
     (0..=input.len())
         .map(|i| input.split_at(i))
         .filter(|(l, _)| !l.contains("Ar"))
-        .filter(|(l, _)| !l.contains("Al"))
-        .filter(|(l, _)| {
-            rules
-                .keys()
-                .filter(|s| things_we_reduce_immediately.iter().any(|x| s.contains(x)))
-                .all(|s| !l.contains(s))
-        })
         .flat_map(|(l, r)| {
             all_prefix_replacements(r, rules)
                 .into_iter()
@@ -39,6 +40,47 @@ fn all_replacements_pruned(input: &str, rules: &HashMap<String, Vec<String>>) ->
         })
         .map(|(l, r)| l.to_string() + &r)
         .collect()
+}
+
+fn all_replacements_if_forced(
+    input: &str,
+    (i, j): (usize, usize),
+    rules: &HashMap<String, Vec<String>>,
+) -> Option<HashSet<String>> {
+    let s = &input[i..=j];
+    if !is_forced_replacement(s, rules) {
+        return None;
+    }
+    let replacements = all_replacements(s, rules);
+    if !replacements.is_empty() {
+        return Some(
+            replacements
+                .into_iter()
+                .map(|s| format!("{}{s}{}", &input[..i], &input[j + 1..]))
+                .collect(),
+        );
+    }
+    None
+}
+
+fn is_forced_replacement(s: &str, rules: &HashMap<String, Vec<String>>) -> bool {
+    if s.starts_with("Rn")
+        && s.ends_with("Ar")
+        && s.matches("Rn").count() == 1
+        && s.matches("Ar").count() == 1
+    {
+        return true;
+    }
+
+    if rules.contains_key(s) && (s.contains("Ca") || s.contains("Ti")) {
+        return true;
+    }
+
+    if s == "PB" {
+        return true;
+    }
+
+    false
 }
 
 fn all_prefix_replacements(input: &str, rules: &HashMap<String, Vec<String>>) -> Vec<String> {
@@ -50,6 +92,7 @@ fn all_prefix_replacements(input: &str, rules: &HashMap<String, Vec<String>>) ->
 }
 
 fn main() {
+    let time = Instant::now();
     let input = read_to_string("input").unwrap();
     let start = input.lines().last().unwrap();
     let rules = input
@@ -85,16 +128,9 @@ fn main() {
             .into_iter()
             .flat_map(|s| all_replacements_pruned(&s, &reverse_rules))
             .collect();
-        println!(
-            "{}",
-            current
-                .iter()
-                .map(|s| s.chars().filter(|&c| c == 'R').count())
-                .max()
-                .unwrap_or_default()
-        );
         output_2 += 1
     }
 
     println!("part 1: {output_1} part 2: {output_2}");
+    println!("time: {}s", time.elapsed().as_secs_f32())
 }
