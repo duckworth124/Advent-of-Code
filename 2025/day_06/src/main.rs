@@ -36,9 +36,9 @@ fn solve(input: &str) -> (u64, u64) {
                 .map(|y| &grid[y][x][x2..=x2])
                 .skip_while(|&s| s == " ")
                 .take_while(|&s| s != " ")
-                .fold(0, |acc, s| {
-                    acc * 10 + s.chars().next().unwrap() as u64 - '0' as u64
-                })
+                .map(|s| s.chars().next().unwrap())
+                .map(|s| s as u64 - '0' as u64)
+                .fold(0, |acc, s| acc * 10 + s)
         });
 
         output_2 += if grid[height - 1][x].contains('+') {
