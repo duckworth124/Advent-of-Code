@@ -22,10 +22,11 @@ fn solve(input: &str) -> (u64, u64) {
     let mut output_1 = 0;
     let mut output_2 = 0;
     for x in 0..width {
+        let op = grid[height - 1][x].trim();
         let nums = (0..height - 1)
             .map(|y| grid[y][x])
             .map(|s| s.trim().parse::<u64>().unwrap());
-        output_1 += if grid[height - 1][x].contains('+') {
+        output_1 += if op == "+" {
             nums.sum::<u64>()
         } else {
             nums.product::<u64>()
@@ -41,7 +42,7 @@ fn solve(input: &str) -> (u64, u64) {
                 .fold(0, |acc, s| acc * 10 + s)
         });
 
-        output_2 += if grid[height - 1][x].contains('+') {
+        output_2 += if op == "+" {
             nums.sum::<u64>()
         } else {
             nums.product::<u64>()
