@@ -18,44 +18,27 @@ impl<'a> Grid<'a> {
         }
     }
 
-    fn splits(&self) -> u32 {
-        let mut occupied = vec![false; self.width];
-        occupied[self.start] = true;
-        let mut count = 0;
-        for row in self.tiles.lines() {
-            for (x, c) in row.char_indices() {
-                let beam = occupied[x];
-                let splitter = c == '^';
-                if beam && splitter {
-                    occupied[x] = false;
-                    occupied[x - 1] = true;
-                    occupied[x + 1] = true;
-                    count += 1
-                }
-            }
-        }
-        count
-    }
-
-    fn quantum_splits(&self) -> u64 {
+    fn splits(&self) -> (u32, u64) {
         let mut occupied = vec![0; self.width];
         occupied[self.start] = 1;
+        let mut splits = 0;
         for row in self.tiles.lines() {
             for (x, c) in row.char_indices() {
-                if c == '^' {
+                if c == '^' && occupied[x] > 0 {
                     occupied[x - 1] += occupied[x];
                     occupied[x + 1] += occupied[x];
                     occupied[x] = 0;
+                    splits += 1
                 }
             }
         }
-        occupied.into_iter().sum()
+        (splits, occupied.into_iter().sum())
     }
 }
 
 fn solve(input: &str) -> (u32, u64) {
     let grid = Grid::parse(input);
-    (grid.splits(), grid.quantum_splits())
+    grid.splits()
 }
 
 fn main() {
