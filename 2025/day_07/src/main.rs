@@ -1,84 +1,61 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fs::read_to_string,
-    time::Instant,
-};
+use std::{fs::read_to_string, time::Instant};
 
-struct Grid {
-    tiles: Vec<Vec<bool>>,
-    start: (usize, usize),
+struct Grid<'a> {
+    tiles: &'a str,
+    start: usize,
+    width: usize,
 }
 
-impl Grid {
-    fn parse(input: &str) -> Self {
-        let tiles = input
-            .lines()
-            .map(|l| l.chars().map(|c| c == '^').collect())
-            .collect();
-        let start = (input.find('S').unwrap(), 0);
-        Self { tiles, start }
+impl<'a> Grid<'a> {
+    fn parse(input: &'a str) -> Self {
+        let tiles = input;
+        let width = input.find('\n').unwrap();
+        let start = input.find('S').unwrap();
+        Self {
+            tiles,
+            start,
+            width,
+        }
     }
 
-    fn count_splits(&self) -> u32 {
-        let height = self.tiles.len();
-        let width = self.tiles[0].len();
-        let mut frontier = vec![self.start];
-        let mut visited = HashSet::new();
+    fn splits(&self) -> u32 {
+        let mut occupied = vec![false; self.width];
+        occupied[self.start] = true;
         let mut count = 0;
-        while let Some(current) = frontier.pop() {
-            let (x, y) = current;
-            if !visited.insert(current) {
-                continue;
+        for row in self.tiles.lines() {
+            for (x, c) in row.char_indices() {
+                let beam = occupied[x];
+                let splitter = c == '^';
+                if beam && splitter {
+                    occupied[x] = false;
+                    occupied[x - 1] = true;
+                    occupied[x + 1] = true;
+                    count += 1
+                }
             }
-            if y == height {
-                continue;
-            }
-            if x == width {
-                continue;
-            }
-            if self.tiles[y][x] {
-                frontier.push((x.saturating_sub(1), y));
-                frontier.push((x + 1, y));
-                count += 1;
-                continue;
-            }
-            frontier.push((x, y + 1));
         }
         count
     }
 
-    fn quantum_splits(
-        &self,
-        start: (usize, usize),
-        cache: &mut HashMap<(usize, usize), u64>,
-    ) -> u64 {
-        let mut current = start;
-        let height = self.tiles.len();
-        if let Some(&output) = cache.get(&start) {
-            return output;
-        }
-        loop {
-            current.1 += 1;
-            let (x, y) = current;
-            if y == height {
-                return 1;
-            }
-            if self.tiles[y][x] {
-                let output =
-                    self.quantum_splits((x - 1, y), cache) + self.quantum_splits((x + 1, y), cache);
-                cache.insert(start, output);
-                return output;
+    fn quantum_splits(&self) -> u64 {
+        let mut occupied = vec![0; self.width];
+        occupied[self.start] = 1;
+        for row in self.tiles.lines() {
+            for (x, c) in row.char_indices() {
+                if c == '^' {
+                    occupied[x - 1] += occupied[x];
+                    occupied[x + 1] += occupied[x];
+                    occupied[x] = 0;
+                }
             }
         }
+        occupied.into_iter().sum()
     }
 }
 
 fn solve(input: &str) -> (u32, u64) {
     let grid = Grid::parse(input);
-    (
-        grid.count_splits(),
-        grid.quantum_splits(grid.start, &mut HashMap::new()),
-    )
+    (grid.splits(), grid.quantum_splits())
 }
 
 fn main() {
