@@ -303,7 +303,7 @@ fn min_sum(functions: Vec<AffineFunction>) -> Rational32 {
 
     bounds
         .into_iter()
-        .map(|(low, high)| (low.to_integer()..=high.to_integer()))
+        .map(|(low, high)| low.to_integer()..=high.to_integer())
         .multi_cartesian_product()
         .map(|v| functions.iter().map(|f| f.eval(&v)).collect_vec())
         .filter(|v| v.iter().all(|&x| x.is_integer() && x >= 0.into()))
