@@ -16,18 +16,18 @@ fn ribbon((l, w, h): (u32, u32, u32)) -> u32 {
 
 fn solve(path: &str) -> (u32, u32) {
     let input = read_to_string(path).unwrap();
-    let dimensions = input
-        .lines()
-        .map(|l| {
-            l.split('x')
-                .map(|s| s.parse::<u32>().unwrap())
-                .collect_tuple()
-                .unwrap()
-        })
-        .collect_vec();
+    let mut output_1 = 0;
+    let mut output_2 = 0;
+    for dims in input.lines().map(|l| {
+        l.split('x')
+            .map(|s| s.parse::<u32>().unwrap())
+            .collect_tuple()
+            .unwrap()
+    }) {
+        output_1 += wrapping_paper(dims);
+        output_2 += ribbon(dims)
+    }
 
-    let output_1 = dimensions.iter().copied().map(wrapping_paper).sum();
-    let output_2 = dimensions.iter().copied().map(ribbon).sum();
     (output_1, output_2)
 }
 
