@@ -259,7 +259,7 @@ impl Machine {
         equations.gauss_reduce();
         let solutions = equations.solution_space();
         let output = min_sum(solutions);
-        assert!(output.is_integer());
+        debug_assert!(output.is_integer());
         output.to_integer()
     }
 }
