@@ -1,13 +1,12 @@
-use itertools::Itertools;
-use std::fs::read_to_string;
+use std::{array, fs::read_to_string};
 
-fn wrapping_paper((l, w, h): (u32, u32, u32)) -> u32 {
+fn wrapping_paper([l, w, h]: [u32; 3]) -> u32 {
     let areas = [l * w, w * h, l * h];
     let min = areas[0].min(areas[1]).min(areas[2]);
     areas.into_iter().map(|a| a * 2).sum::<u32>() + min
 }
 
-fn ribbon((l, w, h): (u32, u32, u32)) -> u32 {
+fn ribbon([l, w, h]: [u32; 3]) -> u32 {
     let perimeters = [l + w, l + h, w + h];
     let min = perimeters[0].min(perimeters[1]).min(perimeters[2]);
     let volume = l * w * h;

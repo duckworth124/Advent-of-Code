@@ -1,4 +1,4 @@
-use std::fs::read_to_string;
+use std::{fs::read_to_string, time::Instant};
 
 fn solve(path: &str) -> (i32, usize) {
     let input = read_to_string(path).unwrap();
@@ -20,6 +20,8 @@ fn solve(path: &str) -> (i32, usize) {
 }
 
 fn main() {
+    let time = Instant::now();
     let (output_1, output_2) = solve("input");
-    println!("part 1: {output_1} part 2: {output_2}")
+    println!("part 1: {output_1} part 2: {output_2}");
+    println!("time: {}s", time.elapsed().as_secs_f32())
 }
