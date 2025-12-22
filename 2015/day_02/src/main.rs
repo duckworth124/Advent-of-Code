@@ -18,10 +18,8 @@ fn solve(path: &str) -> (u32, u32) {
     let mut output_1 = 0;
     let mut output_2 = 0;
     for dims in input.lines().map(|l| {
-        l.split('x')
-            .map(|s| s.parse::<u32>().unwrap())
-            .collect_tuple()
-            .unwrap()
+        let mut dims = l.split('x');
+        array::from_fn(|_| dims.next().unwrap().parse().unwrap())
     }) {
         output_1 += wrapping_paper(dims);
         output_2 += ribbon(dims)

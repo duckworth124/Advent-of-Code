@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
+use std::fs::read_to_string;
+=======
 use std::{fs::read_to_string, time::Instant};
+>>>>>>> Stashed changes
 
 fn parse_line(line: &str) -> ((usize, usize), usize) {
     let (l, r) = line.split_once(": ").unwrap();
@@ -18,9 +22,15 @@ fn solve(input: &str) -> usize {
 }
 
 fn main() {
+<<<<<<< Updated upstream
+    let input = read_to_string("input").unwrap();
+    let output_1 = solve(&input);
+    println!("part 1: {output_1}")
+=======
     let time = Instant::now();
     let input = read_to_string("input").unwrap();
     let output_1 = solve(&input);
     println!("part 1: {output_1}");
     println!("time: {}s", time.elapsed().as_secs_f32())
+>>>>>>> Stashed changes
 }
