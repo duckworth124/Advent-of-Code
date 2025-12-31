@@ -1,80 +1,108 @@
-use std::fs::read_to_string;
-use winnow::{
-    Parser, Result,
-    ascii::{alpha0, dec_int},
-    combinator::{alt, delimited, preceded, separated},
-};
+use std::{fs::read_to_string, time::Instant};
 
-#[derive(PartialEq, Eq)]
-enum JsonValue<'a> {
-    Array(Vec<Self>),
-    Object(Vec<Self>),
-    Number(i32),
-    String(&'a str),
+fn parse_int(input: &mut &str) -> i32 {
+    let neg = input.starts_with('-');
+    if neg {
+        *input = &input[1..];
+    };
+    let mut output = 0;
+    while let Some(c) = input.chars().next().filter(|c| c.is_ascii_digit()) {
+        output *= 10;
+        output += c as i32 - '0' as i32;
+        *input = &input[1..];
+    }
+    if neg {
+        output *= -1
+    }
+    output
 }
 
-impl<'a> JsonValue<'a> {
-    fn parse(input: &mut &'a str) -> Result<Self> {
-        alt((
-            Self::parse_array,
-            Self::parse_object,
-            Self::parse_number,
-            Self::parse_string,
-        ))
-        .parse_next(input)
+fn parse_string(input: &mut &str) -> bool {
+    *input = &input[1..];
+    if input.starts_with("red\"") {
+        *input = &input[4..];
+        return true;
     }
+    let p = input.find('"').unwrap();
+    *input = &input[p + 1..];
+    false
+}
 
-    fn parse_array(input: &mut &'a str) -> Result<Self> {
-        delimited('[', separated(0.., Self::parse, ','), ']')
-            .map(Self::Array)
-            .parse_next(input)
-    }
-
-    fn parse_object(input: &mut &'a str) -> Result<Self> {
-        delimited(
-            '{',
-            separated(0.., preceded((Self::parse_string, ':'), Self::parse), ','),
-            '}',
-        )
-        .map(Self::Object)
-        .parse_next(input)
-    }
-
-    fn parse_number(input: &mut &str) -> Result<Self> {
-        dec_int.map(Self::Number).parse_next(input)
-    }
-
-    fn parse_string(input: &mut &'a str) -> Result<Self> {
-        delimited('"', alpha0, '"')
-            .map(Self::String)
-            .parse_next(input)
-    }
-
-    fn sum_of_numbers(&self, ignore_red: bool) -> i32 {
-        match self {
-            Self::Array(array) => array.iter().map(|x| x.sum_of_numbers(ignore_red)).sum(),
-            Self::Object(items) => {
-                if ignore_red && items.contains(&JsonValue::String("red")) {
-                    0
-                } else {
-                    items.iter().map(|x| x.sum_of_numbers(ignore_red)).sum()
-                }
+fn parse_array(input: &mut &str, ignore_red: bool) -> i32 {
+    *input = &input[1..];
+    let mut total = 0;
+    loop {
+        let c = input.chars().next().unwrap();
+        total += match c {
+            '-' | '0'..='9' => parse_int(input),
+            '"' => {
+                parse_string(input);
+                0
             }
-            Self::Number(x) => *x,
-            Self::String(_) => 0,
+            '[' => parse_array(input, ignore_red),
+
+            '{' => parse_object(input, ignore_red),
+
+            _ => unreachable!("unexpected char: {c:?}"),
+        };
+        if input.starts_with(']') {
+            *input = &input[1..];
+            break total;
         }
+        *input = &input[1..];
+    }
+}
+
+fn parse_object(input: &mut &str, ignore_red: bool) -> i32 {
+    *input = &input[1..];
+    let mut total = 0;
+    let mut contains_red = false;
+    loop {
+        parse_string(input);
+        *input = &input[1..];
+        let c = input.chars().next().unwrap();
+        total += match c {
+            '-' | '0'..='9' => parse_int(input),
+            '"' => {
+                if parse_string(input) {
+                    contains_red = true;
+                };
+                0
+            }
+            '[' => parse_array(input, ignore_red),
+            '{' => parse_object(input, ignore_red),
+            _ => unreachable!("unexpected char: {c:?}"),
+        };
+        if input.starts_with('}') {
+            if contains_red && ignore_red {
+                total = 0;
+            }
+            *input = &input[1..];
+            break total;
+        }
+        *input = &input[1..]
+    }
+}
+
+fn parse(mut input: &str, ignore_red: bool) -> i32 {
+    let c = input.chars().next().unwrap();
+    match c {
+        '-' | '0'..='9' => parse_int(&mut input),
+        '"' => 0,
+        '[' => parse_array(&mut input, ignore_red),
+        '{' => parse_object(&mut input, ignore_red),
+        _ => unreachable!("unexpected char: {c:?}"),
     }
 }
 
 fn solve(input: &str) -> (i32, i32) {
-    let value = JsonValue::parse.parse(input).unwrap();
-    let output_1 = value.sum_of_numbers(false);
-    let output_2 = value.sum_of_numbers(true);
-    (output_1, output_2)
+    (parse(input, false), parse(input, true))
 }
 
 fn main() {
+    let time = Instant::now();
     let input = read_to_string("input").unwrap();
     let (output_1, output_2) = solve(input.trim());
-    println!("part 1: {output_1} part 2: {output_2}")
+    println!("part 1: {output_1} part 2: {output_2}");
+    println!("time: {}s", time.elapsed().as_secs_f32())
 }

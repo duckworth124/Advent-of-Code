@@ -1,6 +1,5 @@
-use std::fs::read_to_string;
-
 use itertools::Itertools;
+use std::fs::read_to_string;
 
 fn is_vowel(c: char) -> bool {
     ['a', 'e', 'i', 'o', 'u'].contains(&c)

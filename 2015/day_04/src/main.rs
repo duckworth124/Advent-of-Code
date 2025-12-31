@@ -1,6 +1,5 @@
-use std::time::Instant;
-
 use md5::compute;
+use std::time::Instant;
 
 fn solve(input: &str) -> (usize, usize) {
     let mut output_1 = None;
